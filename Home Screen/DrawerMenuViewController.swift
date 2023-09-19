@@ -6,10 +6,13 @@
 //
 
 import UIKit
+import FirebaseAuth
 
 class DrawerMenuViewController: UIViewController {
 
     let transitionManager = DrawerTransitionManager()
+    
+    var authHandle : AuthStateDidChangeListenerHandle?
     
     let profilePhoto : UIImageView = {
         let imageView = UIImageView()
@@ -85,6 +88,18 @@ class DrawerMenuViewController: UIViewController {
     
     func initializeMenu(){
         
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        authHandle = Auth.auth().addStateDidChangeListener { auth, user in
+          // ...
+        }
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        Auth.auth().removeStateDidChangeListener(authHandle!)
     }
 
 }

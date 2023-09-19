@@ -38,11 +38,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         Authentication.auth.refreshAccessToken { success in
             print("Refreshed : \(success)")
         }
-        FirebaseApp.configure()
 //        print(Authentication.auth.loginURL?.absoluteString)
+        FirebaseApp.configure()
         
         return true
     }
+    
+    
 
     // MARK: UISceneSession Lifecycle
 

@@ -7,6 +7,7 @@
 
 import UIKit
 import ARKit
+import FirebaseAuth
 
 enum HomePageSections{
     case Category(viewModel: [UIViewController])
@@ -29,6 +30,8 @@ class HomePageViewController: UIViewController {
     var watchBarButton : UIBarButtonItem?
     
     var menuButton : UIBarButtonItem?
+    
+    var authHandle : AuthStateDidChangeListenerHandle?
     
     let watchRender : UIButton = {
         let button = UIButton()
@@ -62,6 +65,18 @@ class HomePageViewController: UIViewController {
         collectionView.frame = CGRect(x: 0, y: watchRender.bottom, width: view.width, height: (view.height - watchRender.bottom))
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        authHandle = Auth.auth().addStateDidChangeListener { auth, user in
+          // ...
+        }
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        Auth.auth().removeStateDidChangeListener(authHandle!)
+    }
+    
     func createNavigationBar(){
         watchBarButton = UIBarButtonItem(title: "Back",image: UIImage(systemName: "applewatch"), target: self, action: #selector(smartWatchButtonTouched))
         watchBarButton?.tintColor = .white
@@ -79,9 +94,17 @@ class HomePageViewController: UIViewController {
     }
     
     @objc func drawNavigationDrawer(){
-        let navigationDrawer = DrawerMenuViewController()
-        
-        present(navigationDrawer, animated: true)
+//        let navigationDrawer = DrawerMenuViewController()
+//
+//        present(navigationDrawer, animated: true)
+        FirebaseManager.firebase_manager.createFirebaseUser(with: "wartyakhilesh@gmail.com", passoword: "Password") { result in
+            switch result{
+            case true:
+                print("Created User")
+            case false:
+                print("Failed to Create User")
+            }
+        }
     }
     
     func createWatchFaceRender(){
