@@ -94,17 +94,9 @@ class HomePageViewController: UIViewController {
     }
     
     @objc func drawNavigationDrawer(){
-//        let navigationDrawer = DrawerMenuViewController()
-//
-//        present(navigationDrawer, animated: true)
-        FirebaseManager.firebase_manager.createFirebaseUser(with: "wartyakhilesh@gmail.com", passoword: "Password") { result in
-            switch result{
-            case true:
-                print("Created User")
-            case false:
-                print("Failed to Create User")
-            }
-        }
+        let navigationDrawer = DrawerMenuViewController()
+
+        present(navigationDrawer, animated: true)
     }
     
     func createWatchFaceRender(){
