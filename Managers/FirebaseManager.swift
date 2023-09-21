@@ -8,23 +8,29 @@
 import Foundation
 import FirebaseCore
 import FirebaseAuth
+import FirebaseFirestore
 
 class FirebaseManager {
+    
+    enum FirebaseAuthError : Error{
+        case FailedToCreateUser
+    }
+    
     static let firebase_manager = FirebaseManager()
+    private static let storage = Storage.storage()
+    private static let storageRef = storage.reference()
     
     private static var user : FirebaseAuth.User? = nil
     
-    func createFirebaseUser(with email : String,passoword: String,completion: @escaping(_ success: Bool) -> Void){
+    func createFirebaseUser(with email : String,passoword: String,completion: @escaping(Result<FirebaseAuth.User,Error>) -> Void){
         Auth.auth().createUser(withEmail: email, password: passoword) { result, err in
             guard let user = result?.user , err == nil else{
-                completion(false)
-//                print(err?.localizedDescription)
-                print(err.debugDescription)
+                completion(.failure(FirebaseAuthError.FailedToCreateUser))
+                print(err?.localizedDescription)
                 return
             }
             
-            completion(true)
-            
+            completion(.success(user))
         }
         
     }
@@ -40,12 +46,6 @@ class FirebaseManager {
     
     func getUserDetails() -> FirebaseAuth.User?{
         return FirebaseManager.user
-        
-        
-    }
-    
-    func getDetails(){
-        
     }
     
     func signOutUser(){
@@ -54,6 +54,10 @@ class FirebaseManager {
         }catch{
             print(error.localizedDescription)
         }
+    }
+    
+    func createStorage(user : FirebaseAuth.User){
+        
     }
     
 }
