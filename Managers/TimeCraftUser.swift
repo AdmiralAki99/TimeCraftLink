@@ -9,17 +9,32 @@ import Foundation
 import FirebaseAuth
 
 class TimeCraftUser{
+    
+    static var user = TimeCraftUser()
+    
+    let userName : String
     let email: String
     let uuid : String
+    var userRef : FirebaseAuth.User? = nil
     
-    init(email:String,uuid:String) {
-        self.email = email
-        self.uuid = uuid
+    init(){
+        userName = ""
+        email = ""
+        uuid = ""
     }
     
-    init(user:FirebaseAuth.User){
+    // Creates a User object where Firebase Reference is Non existant
+    init(email:String,uuid:String,userName:String) {
+        self.email = email
+        self.uuid = uuid
+        self.userName = userName
+    }
+    
+    init(user:FirebaseAuth.User,userName:String){
         self.email = user.email ?? ""
         self.uuid = user.uid
+        self.userRef = user
+        self.userName = userName
     }
     
 }
