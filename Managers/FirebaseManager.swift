@@ -9,14 +9,17 @@ import Foundation
 import FirebaseCore
 import FirebaseAuth
 import FirebaseFirestore
+import FirebaseStorage
 
 class FirebaseManager {
     
     enum FirebaseAuthError : Error{
         case FailedToCreateUser
+        case FailedToGetMetadata
     }
     
     static let firebase_manager = FirebaseManager()
+    
     private static let storage = Storage.storage()
     private static let storageRef = storage.reference()
     
@@ -56,8 +59,23 @@ class FirebaseManager {
         }
     }
     
-    func createStorage(user : FirebaseAuth.User){
+    func storeImage(){
         
+        let localFile = URL(string: "https://images.pexels.com/photos/1420440/pexels-photo-1420440.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2")!
+
+        // Create a reference to the file you want to upload
+        let imageTask = Storage.storage().reference().child("file.jpeg")
+        
+        let currentUploadTask = imageTask.putFile(from: localFile,metadata: StorageMetadata()) { (metadata, err) in
+            if let error = err{
+                print(error.localizedDescription)
+                return
+            }
+            
+            print("Success")
+            
+            
+        }
     }
     
 }
