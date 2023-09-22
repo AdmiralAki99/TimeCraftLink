@@ -7,7 +7,7 @@
 
 import UIKit
 
-class SettingsViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
+class SettingsViewScreenController: UIViewController, UITableViewDataSource, UITableViewDelegate {
     
     
     let settingsView : UITableView = {
