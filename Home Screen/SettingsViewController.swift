@@ -11,8 +11,23 @@ class SettingsViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        
+        let back_button = UIBarButtonItem(title: "Back",image: UIImage(systemName: "arrow.backward"), target: self, action: #selector(backButtonPressed))
+        
+        back_button.tintColor = .white
+        
+        navigationItem.leftBarButtonItem = back_button
+        
+        view.backgroundColor = .black
+        
+        navigationItem.largeTitleDisplayMode = .always
+        navigationItem.title = "Settings"
+        self.navigationController?.navigationBar.prefersLargeTitles = true
         // Do any additional setup after loading the view.
+    }
+    
+    @objc func backButtonPressed(){
+        dismiss(animated: true)
     }
     
 
