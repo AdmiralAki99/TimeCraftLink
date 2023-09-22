@@ -14,15 +14,16 @@ class DrawerMenuViewController: UIViewController {
     
     var authHandle : AuthStateDidChangeListenerHandle?
     
-    var menuItems : [(String,String)] = [
-        ("Profile","person.circle"),
-        ("Settings","gearshape.fill"),
-        ("Log Out","rectangle.portrait.and.arrow.forward")
+    var menuItems : [(String,String,UIViewController)] = [
+        ("Profile","person.circle",ProfileViewController()),
+        ("Settings","gearshape.fill",SettingsViewController()),
+        ("Log Out","rectangle.portrait.and.arrow.forward",UIViewController())
     ]
     
     let profilePhoto : UIImageView = {
         let imageView = UIImageView()
         imageView.image = UIImage(systemName: "photo")
+        imageView.sd_setImage(with: URL(string: "https://images.pexels.com/photos/1420440/pexels-photo-1420440.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"))
         return imageView
     }()
     
@@ -164,16 +165,18 @@ class DrawerMenuViewController: UIViewController {
         collectionView.backgroundColor = .clear
         collectionView.delegate = self
         collectionView.dataSource = self
-        
         collectionView.register(DrawerMenuCollectionViewCell.self, forCellWithReuseIdentifier: DrawerMenuCollectionViewCell.identifier)
     }
     
     func initializeMenu(){
-        if TimeCraftUser.user.userRef == nil{
-            createLoginMenu()
-        }else{
-            initializeProfileBackground()
-        }
+//        if TimeCraftUser.user.userRef == nil{
+//            createLoginMenu()
+////            FirebaseManager.firebase_manager.storeImage()
+//        }else{
+//            initializeProfileBackground()
+//        }
+        
+        initializeProfileBackground()
     }
     
     func createLoginMenu(){
@@ -276,6 +279,17 @@ extension DrawerMenuViewController : UICollectionViewDelegate,UICollectionViewDa
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return menuItems.count
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        print("Cell Selected")
+        var viewContoller = menuItems[indexPath.row].2
+        
+        viewContoller = UINavigationController(rootViewController: viewContoller)
+        
+        viewContoller.modalPresentationStyle = .fullScreen
+        
+        present(viewContoller, animated: true)
     }
     
     
