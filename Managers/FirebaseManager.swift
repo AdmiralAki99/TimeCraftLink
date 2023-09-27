@@ -13,17 +13,26 @@ import FirebaseStorage
 
 class FirebaseManager {
     
+    /*
+     MARK: API Response Error
+     */
+    
     enum FirebaseAuthError : Error{
         case FailedToCreateUser
         case FailedToGetMetadata
     }
-    
+    // One instance of the manager that can be accessed by the app
     static let firebase_manager = FirebaseManager()
-    
+    // Storage reference used by Firebase Storage to create directories
     private static let storage = Storage.storage()
     private static let storageRef = storage.reference()
     
+    // One user instance that is stored and used for authentication and details purposes.
     private static var user : FirebaseAuth.User? = nil
+    
+    /*
+     MARK: API Calls
+     */
     
     func createFirebaseUser(with email : String,passoword: String,completion: @escaping(Result<FirebaseAuth.User,Error>) -> Void){
         Auth.auth().createUser(withEmail: email, password: passoword) { result, err in

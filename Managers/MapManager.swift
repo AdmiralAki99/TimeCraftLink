@@ -10,14 +10,20 @@ import MapKit
 
 class MapManager{
     
+    /*
+     MARK: Base API
+     */
+    
     struct API{
         let base_url = "http://maps.apple.com"
     }
-    
+    // One instance of MapManager class that can be accessed by the app.
     static let map_manager = MapManager()
+    // One instance of an array of routes which is refreshed when a new location is seleceted or MOT changes
     static var routes = [MKRoute]()
+    // Once instance of map that needs to be updated and annotated from different screens and view controllers
     static let mapView : MKMapView = MKMapView()
-    
+    // Random colors to make the map routes interesting instead of blue all the time
     static let overlayColors = [
         UIColor.systemRed,
         UIColor.systemBlue,
@@ -29,19 +35,20 @@ class MapManager{
         UIColor.systemTeal,
         UIColor.systemIndigo,
         UIColor.systemGray,
-//        UIColor.systemGray2,
-//        UIColor.systemGray3,
-//        UIColor.systemGray4,
-//        UIColor.systemGray5,
-//        UIColor.systemGray6
     ]
+    
+    /*
+     MARK: API Response Error
+     */
     
     enum MapResponseError : Error{
         case FailedToGetLocation
         case FailedToGetDirections
     }
     
-    
+    /*
+     MARK: API CALLS
+     */
     
     func searchForLocation(with location:String, completion: @escaping(((Result<[MKMapItem],Error>) -> Void))){
         

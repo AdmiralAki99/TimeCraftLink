@@ -9,15 +9,21 @@ import Foundation
 import UIKit
 
 class ToDoListManager{
+    // Static object to have one manager that stores, displays and manipulates items
     static let toDoList_manager = ToDoListManager()
-    
+    // Static collection view so that items can be added and removed from it from any pace without causing discrepancies
     static var collectionView : UICollectionView = UICollectionView(frame: .zero , collectionViewLayout: UICollectionViewCompositionalLayout { sectionIndex, _ -> NSCollectionLayoutSection? in
         return ToDoListViewController.generateCollectionView(with: sectionIndex)
     })
-    
+    // One collection of categories that are stored in the app since there is only one Todo List that needs to be kept
     static var categories = [ToDoListCategory]()
 //    static var ongoing_tasks = [Task]()
+    // One collection of tasks that are maintained in order to display them in the beginning.
     static var todays_tasks = [Task]()
+    
+    /*
+     MARK: Manager Calls
+     */
     
     func createCategory(with categoryName: String, colour: UIColor,icon : String){
         let category = ToDoListCategory(categoryName: categoryName, colour: colour,icon: icon)
