@@ -9,6 +9,29 @@ import UIKit
 
 class ProfileViewController: UIViewController {
     
+    let profileImageView : UIImageView = {
+        let imageView = UIImageView()
+        
+        return imageView
+    }()
+    
+    let profileNameLabel : UILabel = {
+        let label = UILabel()
+        
+        return label
+    }()
+    
+    let profileUserNameLabel : UILabel = {
+        let label = UILabel()
+        
+        return label
+    }()
+    
+    let profileEmail : UILabel = {
+        let label = UILabel()
+        
+        return label
+    }()
     
 
     override func viewDidLoad() {
