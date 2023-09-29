@@ -21,6 +21,7 @@ class FirebaseManager {
         case FailedToCreateUser
         case FailedToGetMetadata
         case FailedToLogInUser
+        case FailedToUpdateUser
     }
     // One instance of the manager that can be accessed by the app
     static let firebase_manager = FirebaseManager()
