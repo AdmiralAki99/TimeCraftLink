@@ -23,7 +23,7 @@ class DrawerMenuViewController: UIViewController {
     let profilePhoto : UIImageView = {
         let imageView = UIImageView()
         imageView.image = UIImage(systemName: "photo")
-        imageView.sd_setImage(with: URL(string: "https://images.pexels.com/photos/1420440/pexels-photo-1420440.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"))
+//        imageView.sd_setImage(with: URL(string: "https://images.pexels.com/photos/1420440/pexels-photo-1420440.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"))
         return imageView
     }()
     
@@ -58,6 +58,7 @@ class DrawerMenuViewController: UIViewController {
         label.font = .preferredFont(forTextStyle: .title1)
         label.textAlignment = .left
         label.numberOfLines = 0
+        label.autoresizesSubviews = true
         label.text = "Welcome"
         return label
     }()
@@ -169,14 +170,12 @@ class DrawerMenuViewController: UIViewController {
     }
     
     func initializeMenu(){
-//        if TimeCraftUser.user.userRef == nil{
-//            createLoginMenu()
-////            FirebaseManager.firebase_manager.storeImage()
-//        }else{
-//            initializeProfileBackground()
-//        }
-        
-        initializeProfileBackground()
+        if TimeCraftUser.user.userRef == nil{
+            createLoginMenu()
+//            FirebaseManager.firebase_manager.storeImage()
+        }else{
+            initializeProfileBackground()
+        }
     }
     
     func createLoginMenu(){
@@ -200,6 +199,24 @@ class DrawerMenuViewController: UIViewController {
         signUpButton.frame = CGRect(x: 10, y: signInButton.bottom, width: 150, height: 30)
         
         signUpButton.addTarget(self, action: #selector(signUpButtonPressed), for: .touchUpInside)
+        signInButton.addTarget(self, action: #selector(loginButtonPressed), for: .touchUpInside)
+    }
+    
+    @objc func loginButtonPressed(){
+        let email = emailLabel.text
+        let password = passwordLabel.text
+        
+        FirebaseManager.firebase_manager.signInUser(with: email!, password: password!) { result in
+            switch result{
+            case .success(let user):
+                TimeCraftUser.user = TimeCraftUser(user: user, userName: user.displayName!)
+                self.welcomeMessage.text = "Welcome \(TimeCraftUser.user.userName)"
+                self.removeSignUpSheet()
+                self.initializeMenu()
+            case .failure(let error):
+                print(error.localizedDescription)
+            }
+        }
     }
     
     @objc func signUpButtonPressed(){
@@ -211,13 +228,14 @@ class DrawerMenuViewController: UIViewController {
             FirebaseManager.firebase_manager.createFirebaseUser(with: email!, passoword: password!) { result in
                 switch result{
                 case .success(let user):
+                    FirebaseManager.firebase_manager.updateProileDisplayName(userName: userName!)
                     TimeCraftUser.user = TimeCraftUser(user: user, userName: userName!)
+                    self.welcomeMessage.text = "Welcome \(TimeCraftUser.user.userName)"
+                    self.removeSignUpSheet()
+                    self.initializeMenu()
                 case .failure(let error):
                     print(error.localizedDescription)
                 }
-                self.welcomeMessage.text = "Welcome \(TimeCraftUser.user.userName)"
-                self.removeSignUpSheet()
-                self.initializeMenu()
             }
         }else{
             
