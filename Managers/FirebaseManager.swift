@@ -20,6 +20,7 @@ class FirebaseManager {
     enum FirebaseAuthError : Error{
         case FailedToCreateUser
         case FailedToGetMetadata
+        case FailedToLogInUser
     }
     // One instance of the manager that can be accessed by the app
     static let firebase_manager = FirebaseManager()
@@ -47,12 +48,18 @@ class FirebaseManager {
         
     }
     
-    func signInUser(with email : String , password : String){
+    func signInUser(with email : String , password : String,completion: @escaping (Result<FirebaseAuth.User,Error>) -> Void){
         Auth.auth().signIn(withEmail: email, password: password) { [weak self] result, err in
-            guard let user = self else{
+            guard let auth = self else{
+                completion(.failure(FirebaseAuthError.FailedToLogInUser))
                 return
             }
-            FirebaseManager.user = result?.user
+            
+            guard let user = result?.user else{
+                completion(.failure(FirebaseAuthError.FailedToLogInUser))
+                return
+            }
+            completion(.success(user))
         }
     }
     
@@ -85,6 +92,16 @@ class FirebaseManager {
             
             
         }
+    }
+    
+    func updateProileDisplayName(userName : String){
+        let changeRequest = Auth.auth().currentUser?.createProfileChangeRequest()
+        changeRequest?.displayName = userName
+    }
+    
+    func updateProfileImage(photoURL: URL){
+        let changeRequest = Auth.auth().currentUser?.createProfileChangeRequest()
+        changeRequest?.photoURL = photoURL
     }
     
 }
