@@ -11,25 +11,24 @@ class ProfileViewController: UIViewController {
     
     let profileImageView : UIImageView = {
         let imageView = UIImageView()
-        
+        imageView.image = UIImage(systemName: "photo")
         return imageView
     }()
     
     let profileNameLabel : UILabel = {
         let label = UILabel()
-        
-        return label
-    }()
-    
-    let profileUserNameLabel : UILabel = {
-        let label = UILabel()
-        
+        label.text = "Akhilesh Warty"
+        label.textAlignment = .center
+        label.font = .preferredFont(forTextStyle: .largeTitle)
         return label
     }()
     
     let profileEmail : UILabel = {
         let label = UILabel()
-        
+        label.text = "akhileshwarty@gmail.com"
+        label.textColor = .secondaryLabel
+        label.textAlignment = .center
+        label.font = .preferredFont(forTextStyle: .subheadline)
         return label
     }()
     
@@ -49,6 +48,21 @@ class ProfileViewController: UIViewController {
         navigationItem.title = "Profile"
         self.navigationController?.navigationBar.prefersLargeTitles = true
         // Do any additional setup after loading the view.
+    }
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        view.addSubview(profileImageView)
+        view.addSubview(profileNameLabel)
+        view.addSubview(profileEmail)
+        
+        profileImageView.frame = CGRect(x: view.width/2 - 40, y: 150, width: 80, height: 80)
+        profileImageView.layer.cornerRadius = 50
+        profileImageView.layer.masksToBounds = true
+        
+        profileNameLabel.frame = CGRect(x: 0, y: profileImageView.bottom, width: view.width - 10, height: 44)
+        profileEmail.frame = CGRect(x: 0, y: profileNameLabel.bottom, width: view.width - 10, height: 30)
+        
     }
     
     @objc func backButtonPressed(){
