@@ -24,7 +24,7 @@ protocol BluetoothManagerProtocol{
 class BluetoothManager{
     static let bluetooth_manager = BluetoothManager()
     
-    static var peripherals : Dictionary<UUID,CBPeripheral> = Dictionary<UUID,CBPeripheral>()
+    var peripheral : CBPeripheral!
     var bluetoothName : String = ""
     var peripheralManager : CBPeripheralManager? = nil
     var centralManager : CBCentralManager? = nil
@@ -127,7 +127,33 @@ class BluetoothManager{
 //
 //extension BluetoothManager : CBCentralManagerDelegate{
 //    func centralManagerDidUpdateState(_ central: CBCentralManager) {
-//        <#code#>
+//        switch central.state{
+//            case .poweredOff:
+//                print("Is Powered Off.")
+//            case .poweredOn:
+//                print("Is Powered On.")
+//                startScanning()
+//            case .unsupported:
+//                print("Is Unsupported.")
+//            case .unauthorized:
+//                print("Is Unauthorized.")
+//            case .unknown:
+//                print("Unknown")
+//            case .resetting:
+//                print("Resetting")
+//        default:
+//            break
+//        }
+//    }
+//    
+//    func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
+//        self.peripheral = peripheral
+//        self.peripheral.delegate = self
+//        
+//        print("Peripheral Discovered: \(peripheral)")
+//              print("Peripheral name: \(peripheral.name)")
+//            print ("Advertisement Data : \(advertisementData)")
+//        
 //    }
 //    
 //    
