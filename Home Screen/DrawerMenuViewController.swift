@@ -170,14 +170,12 @@ class DrawerMenuViewController: UIViewController {
     }
     
     func initializeMenu(){
-//        if TimeCraftUser.user.userRef == nil{
-//            createLoginMenu()
-////            FirebaseManager.firebase_manager.storeImage()
-//        }else{
-//            initializeProfileBackground()
-//        }
-        
-        initializeProfileBackground()
+        if TimeCraftUser.user.userRef == nil{
+            createLoginMenu()
+//            FirebaseManager.firebase_manager.storeImage()
+        }else{
+            initializeProfileBackground()
+        }
     }
     
     func createLoginMenu(){
