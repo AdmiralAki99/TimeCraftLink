@@ -9,6 +9,12 @@ import UIKit
 
 class ProfileViewController: UIViewController {
     
+    let profileCellInfo : [(String,String)] = [
+        ("person.text.rectangle","User Name"),
+        ("at.badge.plus","Email")
+        
+    ]
+    
     let profileImageView : UIImageView = {
         let imageView = UIImageView()
         imageView.image = UIImage(systemName: "photo")
@@ -85,7 +91,7 @@ class ProfileViewController: UIViewController {
             
             item.contentInsets = NSDirectionalEdgeInsets(top: 2, leading: 2, bottom: 2, trailing: 2)
             
-            let group = NSCollectionLayoutGroup.horizontal(layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(1), heightDimension: .absolute(80)), subitem: item, count: 1)
+            let group = NSCollectionLayoutGroup.horizontal(layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(1), heightDimension: .absolute(40)), subitem: item, count: 1)
             let section = NSCollectionLayoutSection(group: group)
 
             return section
@@ -113,15 +119,18 @@ extension ProfileViewController : UICollectionViewDelegate, UICollectionViewData
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: ProfileMenuCollectionViewCell.identifier, for: indexPath)
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: ProfileMenuCollectionViewCell.identifier, for: indexPath) as? ProfileMenuCollectionViewCell else{
+                return UICollectionViewCell()
+            }
         
-        cell.backgroundColor = .systemGreen
+        cell.generateCell(iconName: profileCellInfo[indexPath.row].0, cellName: profileCellInfo[indexPath.row].1)
+        
         
         return cell
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return 10
+        return profileCellInfo.count
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
