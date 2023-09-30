@@ -32,6 +32,10 @@ class ProfileViewController: UIViewController {
         return label
     }()
     
+    private var collectionView : UICollectionView = UICollectionView(frame: .zero , collectionViewLayout: UICollectionViewCompositionalLayout { sectionIndex, _ -> NSCollectionLayoutSection? in
+        return ProfileViewController.generateCollectionView(with: sectionIndex)
+    })
+    
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -47,6 +51,10 @@ class ProfileViewController: UIViewController {
         navigationItem.largeTitleDisplayMode = .always
         navigationItem.title = "Profile"
         self.navigationController?.navigationBar.prefersLargeTitles = true
+        
+        collectionView.register(ProfileMenuCollectionViewCell.self, forCellWithReuseIdentifier: ProfileMenuCollectionViewCell.identifier)
+        collectionView.delegate = self
+        collectionView.dataSource = self
         // Do any additional setup after loading the view.
     }
     
@@ -55,6 +63,7 @@ class ProfileViewController: UIViewController {
         view.addSubview(profileImageView)
         view.addSubview(profileNameLabel)
         view.addSubview(profileEmail)
+        view.addSubview(collectionView)
         
         profileImageView.frame = CGRect(x: view.width/2 - 40, y: 150, width: 80, height: 80)
         profileImageView.layer.cornerRadius = 50
@@ -63,10 +72,23 @@ class ProfileViewController: UIViewController {
         profileNameLabel.frame = CGRect(x: 0, y: profileImageView.bottom, width: view.width - 10, height: 44)
         profileEmail.frame = CGRect(x: 0, y: profileNameLabel.bottom, width: view.width - 10, height: 30)
         
+        collectionView.frame = CGRect(x: 10, y: profileEmail.bottom + 20, width: view.width - 10, height: view.height - (profileEmail.bottom + 20))
+        
     }
     
     @objc func backButtonPressed(){
         dismiss(animated: true)
+    }
+    
+    static func generateCollectionView(with sectionIndex: Int)-> NSCollectionLayoutSection{
+            let item = NSCollectionLayoutItem(layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0)))
+            
+            item.contentInsets = NSDirectionalEdgeInsets(top: 2, leading: 2, bottom: 2, trailing: 2)
+            
+            let group = NSCollectionLayoutGroup.horizontal(layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(1), heightDimension: .absolute(80)), subitem: item, count: 1)
+            let section = NSCollectionLayoutSection(group: group)
+
+            return section
     }
     
     
@@ -82,4 +104,27 @@ class ProfileViewController: UIViewController {
     }
     */
 
+}
+
+extension ProfileViewController : UICollectionViewDelegate, UICollectionViewDataSource{
+
+    func numberOfSections(in collectionView: UICollectionView) -> Int {
+        return 1
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: ProfileMenuCollectionViewCell.identifier, for: indexPath)
+        
+        cell.backgroundColor = .systemGreen
+        
+        return cell
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return 10
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        
+    }
 }
