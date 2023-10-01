@@ -45,8 +45,6 @@ class BluetoothDiscoveryViewController: UIViewController {
         
         view.backgroundColor = .black
         
-        BluetoothManager.bluetooth_manager.beginBluetooth()
-        
 //        createRipple()
         // Do any additional setup after loading the view.
     }
@@ -79,6 +77,7 @@ class BluetoothDiscoveryViewController: UIViewController {
     }
     
     @objc func createRipple(){
+        BluetoothManager.bluetooth_manager.beginBluetooth()
         if rippleLayerAnimated == false{
             for index in 0...2{
                 let bezierPath = UIBezierPath(arcCenter: .zero, radius: (UIScreen.main.bounds.width - 20)/2.0, startAngle: 0, endAngle: 2 * .pi, clockwise: true)

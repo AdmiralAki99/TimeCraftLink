@@ -23,12 +23,18 @@ protocol BluetoothManagerProtocol{
 
 class BluetoothManager : NSObject{
     
+    let SERVICE_UUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
+    let  CHARACTERISTIC_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8"
+    let TIME_CHARACTERISTIC_UUID = "b9dc3d38-4b22-11ee-be56-0242ac120002"
+    
     static var bluetooth_manager = BluetoothManager()
     
     var smartWatchPeripheral : CBPeripheral!
     var bluetoothName : String = ""
     var peripheralManager : CBPeripheralManager? = nil
     var centralManager : CBCentralManager?
+    
+    var peripheralCharacteristics : [CBCharacteristic]!
     
 //    let smartWatchCategory = CBUUID(string: "0x003")
     
@@ -98,10 +104,48 @@ extension BluetoothManager : CBCentralManagerDelegate{
     }
     
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
-        print(peripheral)
+        if peripheral.identifier.uuidString == SERVICE_UUID{
+            smartWatchPeripheral = peripheral
+            smartWatchPeripheral.delegate = self
+            centralManager?.connect(smartWatchPeripheral)
+        }
     }
     
+    func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
+        print("Connected to Device!")
+        
+        peripheral.discoverServices(nil)
+    }
     
+}
+
+extension BluetoothManager : CBPeripheralDelegate{
+    func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
+        guard let peripheralServices = peripheral.services else{
+            return
+        }
+        
+        for services in peripheralServices{
+            print(services)
+            peripheral.discoverCharacteristics(nil, for: services)
+        }
+    }
+    
+    func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
+        guard let characteristics = service.characteristics else{
+            return
+        }
+        
+        peripheralCharacteristics = characteristics
+        
+        for characteristic in characteristics {
+            peripheral.readValue(for: characteristic)
+        }
+    }
+    
+    func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
+        <#code#>
+    }
 }
 
 
