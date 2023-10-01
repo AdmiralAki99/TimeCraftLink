@@ -2,8 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>Can this app communicate with peripherals?</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string></string>
+	<string>Can this app use Bluetooth</string>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
@@ -44,6 +46,11 @@
 			</array>
 		</dict>
 	</dict>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>bluetooth-peripheral</string>
+		<string>bluetooth-central</string>
+	</array>
 	<key>FirebaseAutomaticScreenReportingEnabled</key>
 	<false/>
 </dict>

@@ -45,6 +45,8 @@ class BluetoothDiscoveryViewController: UIViewController {
         
         view.backgroundColor = .black
         
+        BluetoothManager.bluetooth_manager.beginBluetooth()
+        
 //        createRipple()
         // Do any additional setup after loading the view.
     }
