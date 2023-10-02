@@ -73,7 +73,7 @@ class BluetoothManager : NSObject{
         guard let selectedCharacteristic = connectedCharacteristics[characteristic.rawValue] else{
             return
         }
-        smartWatchPeripheral.writeValue(encoded_message, for: selectedCharacteristic, type: .withoutResponse)
+        smartWatchPeripheral.writeValue(encoded_message, for: selectedCharacteristic, type: .withResponse)
     }
     
     private func handleMessage(message : String, characteristic: BLECharacteristics){
@@ -94,35 +94,29 @@ class BluetoothManager : NSObject{
         if SpotifyAPIManager.device_id != ""{
             if metadata == "Pause"{
                 print("Pausing Music")
-                currentMusicPlaybackState = .Paused
                 SpotifyAPIManager.api_manager.pauseSpotifyPlayback(with: SpotifyAPIManager.device_id) { result in
-                    switch result{
-                    case .success(let result):
-                        break
-                    case .failure(let error):
-                        break
-                    }
+                    print(result)
                 }
+                currentMusicPlaybackState = .Paused
             }else if metadata == "Play"{
                 print("Playing Music")
                 currentMusicPlaybackState = .Playing
                 SpotifyAPIManager.api_manager.playSpotifyPlayback(with: SpotifyAPIManager.device_id) { result in
-                    switch result{
-                    case .success(let string):
-                        break
-                    case .failure(let error):
-                        break
-                    }
+                    print(result)
                 }
             }else if metadata == "Rewind"{
                 print("Rewinding Music")
                 currentMusicPlaybackState = .Playing
+                SpotifyAPIManager.api_manager.rewindSpotifyPlayback(with: SpotifyAPIManager.device_id) { result in
+                    print(result)
+                }
             }else if metadata == "Skip"{
                 print("Skipping Music")
                 currentMusicPlaybackState = .Playing
+                SpotifyAPIManager.api_manager.forwardSpotifyPlayback(with: SpotifyAPIManager.device_id) { result in
+                    print(result)
+                }
             }
-        }else{
-            
         }
     }
         

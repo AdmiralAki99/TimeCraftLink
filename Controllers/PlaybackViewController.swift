@@ -42,6 +42,8 @@ class PlaybackViewController: UIViewController {
     
     var playback_device_id = ""
     
+    var old_track = ""
+    
     let playbackController = PlaybackControllerView()
     
     private let albumArt : UIImageView = {
@@ -212,6 +214,7 @@ class PlaybackViewController: UIViewController {
                                     return
                                 }
                                 self.playback_device_id = id
+                                SpotifyAPIManager.device_id = id
                             case .failure(let error):
                                 break
                             }
@@ -240,6 +243,7 @@ class PlaybackViewController: UIViewController {
                         return
                     }
                     self.playback_device_id = id
+                    SpotifyAPIManager.device_id = id
 //                    print(self.playback_device_id)
                 case .failure(let error):
                     break
@@ -580,6 +584,15 @@ extension PlaybackViewController{
             self.nameLabel.text = current_track.item?.name
             self.artistName.text = current_track.item?.artists.first?.name
             self.albumArt.sd_setImage(with: URL(string: current_track.item?.album?.images.first?.url ?? ""))
+            
+            guard let trackName = current_track.item?.name else{
+                return
+            }
+            if trackName != self.old_track{
+                BluetoothManager.bluetooth_manager.sendMessage(message: trackName, characteristic: .MusicState)
+                self.old_track = trackName
+            }
+            
             
             
             guard let albumColor = self.albumArt.image?.averageColor else{
