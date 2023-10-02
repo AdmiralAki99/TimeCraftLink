@@ -10,6 +10,7 @@ import Foundation
 final class SpotifyAPIManager{
     static let api_manager = SpotifyAPIManager()
     
+    static var device_id = ""
     private init(){
         
     }

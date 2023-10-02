@@ -23,17 +23,32 @@ protocol BluetoothManagerProtocol{
 
 class BluetoothManager : NSObject{
     
-    let SERVICE_UUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
-    let  CHARACTERISTIC_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8"
-    let TIME_CHARACTERISTIC_UUID = "b9dc3d38-4b22-11ee-be56-0242ac120002"
+    let SERVICE_UUID = "4FAFC201-1FB5-459E-8FCC-C5C9C331914B"
+    let musicCharacteristicUUID = "BEB5483E-36E1-4688-B7F5-EA07361B26A8"
+    let DateTimeCharacteristicUUID = "B9DC3D38-4B22-11EE-BE56-0242AC120002"
+    let musicStateCharacteristicUUID = "0x2BA3"
+    var currentMusicPlaybackState : MusicPlaybackState = MusicPlaybackState.Paused
     
     static var bluetooth_manager = BluetoothManager()
+    
+    enum BLECharacteristics : String{
+        case MusicState = "BEB5483E-36E1-4688-B7F5-EA07361B26A8"
+        case DateTimeChar = "B9DC3D38-4B22-11EE-BE56-0242AC120002"
+        case MusicMetadataChar = "37253d54-6107-11ee-8c99-0242ac120002"
+        case Initialization = "-"
+    }
+    
+    enum MusicPlaybackState{
+        case Playing
+        case Paused
+    }
     
     var smartWatchPeripheral : CBPeripheral!
     var bluetoothName : String = ""
     var peripheralManager : CBPeripheralManager? = nil
     var centralManager : CBCentralManager?
     var connectedPeripherals : Dictionary<UUID,CBPeripheral> = Dictionary<UUID,CBPeripheral>()
+    var connectedCharacteristics : Dictionary<String,CBCharacteristic> = Dictionary<String,CBCharacteristic>()
     
     var peripheralCharacteristics : [CBCharacteristic]!
     
@@ -53,16 +68,84 @@ class BluetoothManager : NSObject{
         centralManager = CBCentralManager(delegate: self, queue: nil)
     }
     
-    private func sendMessage(){
-        smartWatchPeripheral.setValue("Gravity", forKey: <#T##String#>)
+    func sendMessage(message: String, characteristic : BLECharacteristics){
+        guard let encoded_message = message.encodeString() else {return}
+        guard let selectedCharacteristic = connectedCharacteristics[characteristic.rawValue] else{
+            return
+        }
+        smartWatchPeripheral.writeValue(encoded_message, for: selectedCharacteristic, type: .withoutResponse)
     }
     
-    private func handleMessage(){
+    private func handleMessage(message : String, characteristic: BLECharacteristics){
+        switch characteristic{
+        case .MusicState:
+            parseMusicData(metadata: message)
+        case .DateTimeChar:
+            parseTimeData(metadata: message)
+        case .MusicMetadataChar:
+//            parseMusicData(metadata: message)
+            break
+        default:
+            fatalError("Characteristic Not Set")
+        }
+    }
+    
+    func parseMusicData(metadata : String){
+        if SpotifyAPIManager.device_id != ""{
+            if metadata == "Pause"{
+                print("Pausing Music")
+                currentMusicPlaybackState = .Paused
+                SpotifyAPIManager.api_manager.pauseSpotifyPlayback(with: SpotifyAPIManager.device_id) { result in
+                    switch result{
+                    case .success(let result):
+                        break
+                    case .failure(let error):
+                        break
+                    }
+                }
+            }else if metadata == "Play"{
+                print("Playing Music")
+                currentMusicPlaybackState = .Playing
+                SpotifyAPIManager.api_manager.playSpotifyPlayback(with: SpotifyAPIManager.device_id) { result in
+                    switch result{
+                    case .success(let string):
+                        break
+                    case .failure(let error):
+                        break
+                    }
+                }
+            }else if metadata == "Rewind"{
+                print("Rewinding Music")
+                currentMusicPlaybackState = .Playing
+            }else if metadata == "Skip"{
+                print("Skipping Music")
+                currentMusicPlaybackState = .Playing
+            }
+        }else{
+            
+        }
+    }
+        
+    func parseTimeData(metadata : String){
+            
+    }
+        
+    func parseMusicState(metadata: String){
         
     }
     
     private func createConnection(){
         
+    }
+    
+    private func determineCharacteristic(uuid : String) -> BLECharacteristics{
+        var selectedCharacteristic = BLECharacteristics.Initialization
+        if uuid == musicCharacteristicUUID{
+            selectedCharacteristic = BLECharacteristics.MusicState
+        }else if uuid == DateTimeCharacteristicUUID{
+            selectedCharacteristic = BLECharacteristics.DateTimeChar
+        }
+        return selectedCharacteristic
     }
     
     private func scanBluetoothDevices(){
@@ -139,6 +222,7 @@ extension BluetoothManager : CBPeripheralDelegate{
         peripheralCharacteristics = characteristics
         
         for characteristic in characteristics {
+            connectedCharacteristics[characteristic.uuid.uuidString] = characteristic
             peripheral.readValue(for: characteristic)
             peripheral.setNotifyValue(true, for: characteristic)
         }
@@ -146,7 +230,23 @@ extension BluetoothManager : CBPeripheralDelegate{
     
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
         guard let data = characteristic.value else {return}
-        print(String(data: data, encoding: .utf8) ?? "NIL")
+        guard let message = String(data: data, encoding: .utf8) else{
+            return
+        }
+        handleMessage(message: message, characteristic: determineCharacteristic(uuid: characteristic.uuid.uuidString))
+    }
+}
+
+extension String {
+    func encodeString()->Data?{
+        let data = self.data(using: .utf8)
+        return data
+    }
+    
+    func decodeString()->String{
+        let data = self.data(using: .utf8)
+        let decodedString = String(data: data!, encoding: .nonLossyASCII) ?? ""
+        return decodedString
     }
 }
 
