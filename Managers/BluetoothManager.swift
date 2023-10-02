@@ -33,6 +33,7 @@ class BluetoothManager : NSObject{
     var bluetoothName : String = ""
     var peripheralManager : CBPeripheralManager? = nil
     var centralManager : CBCentralManager?
+    var connectedPeripherals : Dictionary<UUID,CBPeripheral> = Dictionary<UUID,CBPeripheral>()
     
     var peripheralCharacteristics : [CBCharacteristic]!
     
@@ -53,7 +54,7 @@ class BluetoothManager : NSObject{
     }
     
     private func sendMessage(){
-        
+        smartWatchPeripheral.setValue("Gravity", forKey: <#T##String#>)
     }
     
     private func handleMessage(){
@@ -104,7 +105,7 @@ extension BluetoothManager : CBCentralManagerDelegate{
     }
     
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
-        if peripheral.identifier.uuidString == SERVICE_UUID{
+        if peripheral.name == "Lazarus"{
             smartWatchPeripheral = peripheral
             smartWatchPeripheral.delegate = self
             centralManager?.connect(smartWatchPeripheral)
@@ -113,7 +114,6 @@ extension BluetoothManager : CBCentralManagerDelegate{
     
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
         print("Connected to Device!")
-        
         peripheral.discoverServices(nil)
     }
     
@@ -140,11 +140,13 @@ extension BluetoothManager : CBPeripheralDelegate{
         
         for characteristic in characteristics {
             peripheral.readValue(for: characteristic)
+            peripheral.setNotifyValue(true, for: characteristic)
         }
     }
     
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
-        <#code#>
+        guard let data = characteristic.value else {return}
+        print(String(data: data, encoding: .utf8) ?? "NIL")
     }
 }
 
