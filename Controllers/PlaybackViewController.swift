@@ -588,8 +588,13 @@ extension PlaybackViewController{
             guard let trackName = current_track.item?.name else{
                 return
             }
+            
+            guard let trackArtist = current_track.item?.artists.first?.name else{
+                return
+            }
+            
             if trackName != self.old_track{
-                BluetoothManager.bluetooth_manager.sendMessage(message: trackName, characteristic: .MusicState)
+                BluetoothManager.bluetooth_manager.sendMessage(message: "\(trackName);\(trackArtist)", characteristic: .MusicState)
                 self.old_track = trackName
             }
             
