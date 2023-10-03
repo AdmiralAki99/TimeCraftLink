@@ -98,4 +98,13 @@ class ToDoListManager{
         
         return ToDoListManager.categories[selectedCategoryIndex].tasks
     }
+    
+    static func convertTasksToString(){
+        var task_string = ""
+        for tasks in ToDoListManager.todays_tasks{
+            task_string = task_string + tasks.name
+        }
+        
+        BluetoothManager.bluetooth_manager.sendMessage(message: task_string, characteristic: .todoListChar)
+    }
 }

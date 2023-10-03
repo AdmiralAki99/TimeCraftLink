@@ -33,7 +33,7 @@ class BluetoothManager : NSObject{
     
     enum BLECharacteristics : String{
         case MusicState = "BEB5483E-36E1-4688-B7F5-EA07361B26A8"
-        case DateTimeChar = "B9DC3D38-4B22-11EE-BE56-0242AC120002"
+        case todoListChar = "B9DC3D38-4B22-11EE-BE56-0242AC120002"
         case MusicMetadataChar = "37253d54-6107-11ee-8c99-0242ac120002"
         case Initialization = "-"
     }
@@ -80,8 +80,8 @@ class BluetoothManager : NSObject{
         switch characteristic{
         case .MusicState:
             parseMusicData(metadata: message)
-        case .DateTimeChar:
-            parseTimeData(metadata: message)
+        case .todoListChar:
+            parseToDoList(metadata: message)
         case .MusicMetadataChar:
 //            parseMusicData(metadata: message)
             break
@@ -120,8 +120,8 @@ class BluetoothManager : NSObject{
         }
     }
         
-    func parseTimeData(metadata : String){
-            
+    func parseToDoList(metadata : String){
+        
     }
         
     func parseMusicState(metadata: String){
@@ -137,7 +137,7 @@ class BluetoothManager : NSObject{
         if uuid == musicCharacteristicUUID{
             selectedCharacteristic = BLECharacteristics.MusicState
         }else if uuid == DateTimeCharacteristicUUID{
-            selectedCharacteristic = BLECharacteristics.DateTimeChar
+            selectedCharacteristic = BLECharacteristics.todoListChar
         }
         return selectedCharacteristic
     }
