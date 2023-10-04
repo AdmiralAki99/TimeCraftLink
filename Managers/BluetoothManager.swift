@@ -121,6 +121,24 @@ class BluetoothManager : NSObject{
     }
         
     func parseToDoList(metadata : String){
+        guard let index = ToDoListManager.todays_tasks.firstIndex(where: {$0.name == metadata}) else{
+            return
+        }
+        
+        var task = ToDoListManager.todays_tasks[index]
+        
+        switch task.taskStatus{
+        case .Finished:
+            task.taskStatus = TaskStatus.Ongoing
+            print("\(task.name) is Ongoing")
+        case .Ongoing:
+            task.taskStatus = TaskStatus.Finished
+            print("\(task.name) is Finished")
+        }
+        
+        ToDoListManager.todays_tasks[index] = task
+        
+        ToDoListManager.collectionView.reloadData()
         
     }
         

@@ -34,9 +34,6 @@ class ToDoListTaskCollectionViewCell: UICollectionViewCell {
         
         taskLabel.frame = CGRect(x: radioButton.right + 5, y: height/2 - 10, width: width, height: 20)
         
-       
-        
-        
         backgroundColor = UIColor(red: 0.02, green: 0.11, blue: 0.32, alpha: 1.00)
         
         layer.cornerRadius = 20
@@ -44,7 +41,15 @@ class ToDoListTaskCollectionViewCell: UICollectionViewCell {
     }
     
     func generateCell(with task: Task){
-        taskLabel.text = task.name
+        if task.taskStatus == .Ongoing{
+            taskLabel.attributedText = nil
+            taskLabel.text = task.name
+        }else{
+            let attributeString: NSMutableAttributedString = NSMutableAttributedString(string: task.name)
+                attributeString.addAttribute(NSAttributedString.Key.strikethroughStyle, value: 2, range: NSRange(location: 0, length: attributeString.length))
+            taskLabel.attributedText = attributeString
+        }
+       
     }
     
 }
