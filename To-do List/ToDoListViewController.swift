@@ -93,6 +93,8 @@ class ToDoListViewController: UIViewController {
         
         collectionView.addSubview(refreshControl)
         refreshControl.addTarget(self, action: #selector(refreshCollectionView), for: .valueChanged)
+        
+        ToDoListManager.convertTasksToString()
 
         ToDoListManager.collectionView.reloadData()
         // Do any additional setup after loading the view.
@@ -124,6 +126,7 @@ class ToDoListViewController: UIViewController {
     
     @objc func refreshCollectionView(){
         collectionView.reloadData()
+        ToDoListManager.convertTasksToString()
         self.refreshControl.endRefreshing()
     }
 
