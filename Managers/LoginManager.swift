@@ -51,7 +51,7 @@ class Authentication{
     }
     
     private var refresh_token: String?{
-        return UserDefaults.standard.string(forKey: "refresh_token")
+        return UserDefaults.standard.string(forKey: "response_token")
     }
     
     private var expiration_date: Date?{
@@ -81,7 +81,7 @@ class Authentication{
     private var ongoingRefreshBlocks = [((String) -> Void)]()
     
     /*
-     // MARK: Methods & Functions
+      MARK: Methods & Functions
      */
     
     private init(){
@@ -93,15 +93,15 @@ class Authentication{
      */
     
     func refreshAccessToken(completion: ((Bool) -> Void)?){
-        guard !refreshingToken else{
-           return
-        }
-        
-        guard needsRefreshing else{
-            completion?(true)
-            return
-        }
-        
+//        guard !refreshingToken else{
+//           return
+//        }
+//        
+//        guard needsRefreshing else{
+//            completion?(true)
+//            return
+//        }
+//        
         guard let refreshToken = self.refresh_token else{
             return
         }
@@ -138,13 +138,14 @@ class Authentication{
             }
              
              do{
-                 let response = try JSONDecoder().decode(APIResponse.self, from: data)
-                 self?.cacheAccessToken(response: response)
-//                 let json = try JSONSerialization.jsonObject(with: data,options: .allowFragments)
-//                 print("API RESPONSE: \(json)")
+//                 let response = try JSONDecoder().decode(APIResponse.self, from: data)
+//                 print("Response: \(response)")
+//                 self?.cacheAccessToken(response: response)
+                 let json = try JSONSerialization.jsonObject(with: data,options: .allowFragments)
+                 print("API RESPONSE: \(json)")
                  print("Refresh Success")
-                 self?.ongoingRefreshBlocks.forEach { $0(response.access_token)}
-                 self?.ongoingRefreshBlocks.removeAll()
+//                 self?.ongoingRefreshBlocks.forEach { $0(response.access_token)}
+//                 self?.ongoingRefreshBlocks.removeAll()
                  completion?(true)
              }catch {
                  completion?(false)
@@ -159,9 +160,15 @@ class Authentication{
     func cacheAccessToken(response: APIResponse){
         UserDefaults.standard.setValue(response.access_token, forKey: "access_token")
         
-        if let refresh_token = response.refresh_token{
-            UserDefaults.standard.setValue(refresh_token, forKey: "repsonse_token")
+//        if let refresh_token = response.refresh_token{
+//            UserDefaults.standard.setValue(refresh_token, forKey: "repsonse_token")
+//        }
+        
+        guard let refresh_token = response.refresh_token else{
+            return
         }
+        
+        UserDefaults.standard.setValue(refresh_token, forKey: "response_token")
         
         UserDefaults.standard.setValue(Date().addingTimeInterval(TimeInterval(response.expires_in)), forKey: "expiration_date")
     }
@@ -200,8 +207,8 @@ class Authentication{
         apiCall.httpMethod = "POST"
         apiCall.httpBody = queryComponents.query?.data(using: .utf8)
         apiCall.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        var authHeaderString = Client.id + ":" + Client.secret
-        var authHeaderData = authHeaderString.data(using: .utf8)
+        let authHeaderString = Client.id + ":" + Client.secret
+        let authHeaderData = authHeaderString.data(using: .utf8)
         guard let encodedAuthHeaderString = authHeaderData?.base64EncodedString() else{
             completion(false)
             print("BASE 64 Encoding AUTH HEADER FAILED")
@@ -229,3 +236,4 @@ class Authentication{
         webCall.resume()
     }
 }
+

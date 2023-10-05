@@ -7,7 +7,6 @@
 
 import UIKit
 import CoreData
-import SwiftUI
 import FirebaseCore
 
 @main
@@ -35,8 +34,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         window.makeKeyAndVisible()
         self.window = window
         
-        Authentication.auth.refreshAccessToken { success in
-            print("Refreshed : \(success)")
+        Timer.scheduledTimer(withTimeInterval: 3600, repeats: true) { timer in
+            Authentication.auth.refreshAccessToken { success in
+                switch success{
+                case true:
+                    print("Refreshing Token Success")
+                case false:
+                    print("Refreshing Token Failure")
+                }
+            }
         }
 //        print(Authentication.auth.loginURL?.absoluteString)
         FirebaseApp.configure()
