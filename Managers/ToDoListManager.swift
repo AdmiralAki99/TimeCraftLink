@@ -107,4 +107,17 @@ class ToDoListManager{
         
         BluetoothManager.bluetooth_manager.sendMessage(message: task_string, characteristic: .todoListChar)
     }
+    
+    static func convertTaskStatusToString(){
+        var task_status = ""
+        for tasks in ToDoListManager.todays_tasks{
+            switch tasks.taskStatus{
+            case .Finished:
+                task_status = task_status + "T" + ";"
+            case .Ongoing:
+                task_status = task_status + "F" + ";"
+            }
+        }
+        
+    }
 }

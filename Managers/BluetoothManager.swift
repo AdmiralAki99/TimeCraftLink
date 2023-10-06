@@ -26,6 +26,7 @@ class BluetoothManager : NSObject{
     let SERVICE_UUID = "4FAFC201-1FB5-459E-8FCC-C5C9C331914B"
     let musicCharacteristicUUID = "BEB5483E-36E1-4688-B7F5-EA07361B26A8"
     let DateTimeCharacteristicUUID = "B9DC3D38-4B22-11EE-BE56-0242AC120002"
+    let TodoListStatusCharertisticUUID = "28bd3c28-635d-11ee-8c99-0242ac120002"
     let musicStateCharacteristicUUID = "0x2BA3"
     var currentMusicPlaybackState : MusicPlaybackState = MusicPlaybackState.Paused
     
@@ -35,6 +36,7 @@ class BluetoothManager : NSObject{
         case MusicState = "BEB5483E-36E1-4688-B7F5-EA07361B26A8"
         case todoListChar = "B9DC3D38-4B22-11EE-BE56-0242AC120002"
         case MusicMetadataChar = "37253d54-6107-11ee-8c99-0242ac120002"
+        case TodoListStatusChar = "28bd3c28-635d-11ee-8c99-0242ac120002"
         case Initialization = "-"
     }
     
@@ -85,6 +87,8 @@ class BluetoothManager : NSObject{
         case .MusicMetadataChar:
 //            parseMusicData(metadata: message)
             break
+        case .TodoListStatusChar:
+            parseTodoTaskStatus(metadata: message)
         default:
             fatalError("Characteristic Not Set")
         }
@@ -146,6 +150,10 @@ class BluetoothManager : NSObject{
         
     }
     
+    func parseTodoTaskStatus(metadata: String){
+        
+    }
+    
     private func createConnection(){
         
     }
@@ -156,6 +164,8 @@ class BluetoothManager : NSObject{
             selectedCharacteristic = BLECharacteristics.MusicState
         }else if uuid == DateTimeCharacteristicUUID{
             selectedCharacteristic = BLECharacteristics.todoListChar
+        }else if uuid == TodoListStatusCharertisticUUID{
+            selectedCharacteristic = BLECharacteristics.TodoListStatusChar
         }
         return selectedCharacteristic
     }
