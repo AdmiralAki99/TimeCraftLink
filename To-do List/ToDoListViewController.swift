@@ -126,6 +126,7 @@ class ToDoListViewController: UIViewController {
     
     @objc func refreshCollectionView(){
         collectionView.reloadData()
+        print(ToDoListManager.todays_tasks)
         ToDoListManager.convertTasksToString()
         self.refreshControl.endRefreshing()
     }
@@ -189,7 +190,7 @@ extension ToDoListViewController : UICollectionViewDelegate,UICollectionViewData
         case .Category(let viewModel):
             return viewModel.count
         case .Tasks(let viewModel):
-            return viewModel.count
+            return ToDoListManager.todays_tasks.count
         }
     }
     
