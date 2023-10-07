@@ -51,6 +51,7 @@ class BluetoothManager : NSObject{
     var centralManager : CBCentralManager?
     var connectedPeripherals : Dictionary<UUID,CBPeripheral> = Dictionary<UUID,CBPeripheral>()
     var connectedCharacteristics : Dictionary<String,CBCharacteristic> = Dictionary<String,CBCharacteristic>()
+    var isConnected = false
     
     var peripheralCharacteristics : [CBCharacteristic]!
     
@@ -134,10 +135,8 @@ class BluetoothManager : NSObject{
         switch task.taskStatus{
         case .Finished:
             task.taskStatus = TaskStatus.Ongoing
-            print("\(task.name) is Ongoing")
         case .Ongoing:
             task.taskStatus = TaskStatus.Finished
-            print("\(task.name) is Finished")
         }
         
         ToDoListManager.todays_tasks[index] = task
@@ -220,6 +219,7 @@ extension BluetoothManager : CBCentralManagerDelegate{
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
         print("Connected to Device!")
         peripheral.discoverServices(nil)
+        isConnected = true
     }
     
 }

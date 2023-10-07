@@ -11,11 +11,18 @@ class NewTaskViewController: UIViewController {
     
     let taskName : UITextField = {
         let textField = UITextField()
+        textField.font = .preferredFont(forTextStyle: .largeTitle)
         textField.placeholder = "Task Name"
         textField.textColor = .secondaryLabel
         return textField
     }()
     
+    let taskDescription : UITextField = {
+        let textField = UITextField()
+        textField.font = .preferredFont(forTextStyle: .title1)
+        textField.placeholder = "Task Description"
+        return textField
+    }()
     let dueDate : UIDatePicker = {
         let picker = UIDatePicker()
         picker.datePickerMode = .date
@@ -51,6 +58,10 @@ class NewTaskViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        navigationItem.largeTitleDisplayMode = .always
+        navigationItem.title = "New Task"
+        self.navigationController?.navigationBar.prefersLargeTitles = true
+        
         view.backgroundColor = UIColor(red: 0.21, green: 0.32, blue: 0.61, alpha: 1.00)
         
         let back_button = UIBarButtonItem(title: "Back",image: UIImage(systemName: "arrow.backward"), target: self, action: #selector(backButtonTapped))
@@ -64,6 +75,8 @@ class NewTaskViewController: UIViewController {
         
         categoryPicker.delegate = self
         categoryPicker.dataSource = self
+        
+        hideKeyboard()
 
         // Do any additional setup after loading the view.
     }
@@ -75,13 +88,15 @@ class NewTaskViewController: UIViewController {
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         view.addSubview(taskName)
+        view.addSubview(taskDescription)
         view.addSubview(dueDate)
         view.addSubview(categoryPicker)
         view.addSubview(addTaskButton)
         
-        taskName.frame = CGRect(x: 20, y: view.height/2 - 50, width: view.width - 20, height: 20)
-        dueDate.frame = CGRect(x: 20, y: view.height/2 - 30, width: 125, height: 40)
-        categoryPicker.frame = CGRect(x: 20, y: dueDate.bottom + 10, width: 150, height: 60)
+        taskName.frame = CGRect(x: 20, y: view.height/2 - 200, width: view.width - 20, height: 40)
+        taskDescription.frame = CGRect(x: 20, y: taskName.bottom + 40, width: view.width - 20, height: 40)
+        dueDate.frame = CGRect(x: 20, y: taskDescription.bottom + 40, width: 125, height: 60)
+        categoryPicker.frame = CGRect(x: dueDate.right + 20, y: taskDescription.bottom + 40, width: 150, height: 60)
         addTaskButton.frame = CGRect(x: view.width - 100, y: view.height - 120, width: 60, height: 60)
     }
     
@@ -94,9 +109,28 @@ class NewTaskViewController: UIViewController {
             return
         }
         
-        ToDoListManager.toDoList_manager.createTask(with: Task(name: "New Event", category: selectedCategory, description: "New Event Trial", dueDate: Date()), category: selectedCategory)
+        guard let taskName = taskName.text else{
+            return
+        }
+        
+        guard let taskDescription = taskDescription.text else{
+            return
+        }
+        
+        ToDoListManager.toDoList_manager.createTask(with: Task(name: taskName, category: selectedCategory, description: taskDescription, dueDate: Date()), category: selectedCategory)
+        
+        navigationController?.popViewController(animated: true)
         
         ToDoListManager.collectionView.reloadData()
+    }
+    
+    func hideKeyboard(){
+        let tap = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
+        view.addGestureRecognizer(tap)
+    }
+    
+    @objc func dismissKeyboard(){
+        view.endEditing(true)
     }
 
     /*
