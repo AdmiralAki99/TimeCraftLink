@@ -120,4 +120,8 @@ class ToDoListManager{
         }
         
     }
+    
+    func storeTasks(with filePath : URL){
+        DataManager.data_manager.writeToFile(with: filePath, data: ToDoListManager.categories[0])
+    }
 }
