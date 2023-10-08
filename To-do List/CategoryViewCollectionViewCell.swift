@@ -42,12 +42,8 @@ class CategoryViewCollectionViewCell: UICollectionViewCell {
     
     func generateViewCell(category : ToDoListCategory){
         categoryLabel.text = category.categoryName
-        iconImage = category.icon
+        iconImage.image = UIImage(systemName:category.icon)
         iconImage.tintColor = .white
-//        iconImage.layer.borderColor = category.colour.cgColor
-//        iconImage.layer.borderWidth = 1
-        
-        
     }
     
 }
