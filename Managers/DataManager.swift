@@ -13,10 +13,28 @@ class DataManager{
         case FailedToEncode
         case FailedToWriteToFile
         case FailedToDecode
+        case FailedToReadFromFile
     }
     
     enum DataDecodeType{
         case ToDoListManager
+    }
+    
+    enum FilePath : String{
+        case ToDoListManager
+        
+        
+        
+        
+        var filePath : URL {
+            switch self{
+            case .ToDoListManager:
+                let filePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+                let path = filePath.appendingPathComponent("tasks.json")
+                return path
+            }
+           
+        }
     }
     
     static let data_manager = DataManager()
@@ -27,13 +45,12 @@ class DataManager{
         encoder.outputFormatting = .prettyPrinted
     }
     
-    func writeToFile(with filePath : URL, data: Codable){
+    func writeToFile(with type : FilePath, data: Codable){
         encode(with: data) { result in
             switch result{
             case .success(let data):
                 do{
-                    try data.write(to: filePath)
-                    
+                    try data.write(to: type.filePath)
                 }catch{
                     print(error.localizedDescription)
                 }
@@ -53,19 +70,36 @@ class DataManager{
         }
     }
     
-    func decode(type : DataDecodeType, data : Data){
+    func decode(type : DataDecodeType, data : Data,completion: @escaping(Result<Codable,Error>) -> Void){
         switch type{
         case .ToDoListManager:
             do{
-                try print(decoder.decode(ToDoListCategory.self, from: data))
+                let data = try decoder.decode([ToDoListCategory].self, from: data)
+                completion(.success(data))
             }catch{
                 print(error.localizedDescription)
+                completion(.failure(DataManagerAPIError.FailedToDecode))
             }
         }
     }
     
-    func readFromFile(with filePath : String){
-        
+    func readFromFile(type : FilePath,completion: @escaping(Result<Codable,Error>)->Void){
+        switch type{
+        case .ToDoListManager:
+            do{
+                let data = try Data(contentsOf: type.filePath)
+                decode(type: .ToDoListManager, data: data) { result in
+                    switch result{
+                    case .success(let data):
+                        completion(.success(data))
+                    case .failure(let error):
+                        completion(.failure(DataManagerAPIError.FailedToReadFromFile))
+                    }
+                }
+            }catch{
+                print("Cannot Read From File")
+            }
+        }
     }
     
 //    func writeToFile(with file : File){

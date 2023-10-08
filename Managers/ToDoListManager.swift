@@ -121,7 +121,18 @@ class ToDoListManager{
         
     }
     
-    func storeTasks(with filePath : URL){
-        DataManager.data_manager.writeToFile(with: filePath, data: ToDoListManager.categories[0])
+    func storeTasks(){
+        DataManager.data_manager.writeToFile(with: .ToDoListManager, data: ToDoListManager.categories)
+    }
+    
+    func readTasksFromFile(){
+        DataManager.data_manager.readFromFile(type: .ToDoListManager) { result in
+            switch result{
+            case .success(let data):
+                print(data)
+            case .failure(let error):
+                break
+            }
+        }
     }
 }
