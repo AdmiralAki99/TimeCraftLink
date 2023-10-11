@@ -11,6 +11,10 @@ import FirebaseAuth
 import FirebaseFirestore
 import FirebaseStorage
 
+enum FileType{
+    case TodoListTasks
+}
+
 class FirebaseManager {
     
     /*
@@ -22,6 +26,7 @@ class FirebaseManager {
         case FailedToGetMetadata
         case FailedToLogInUser
         case FailedToUpdateUser
+        case FailedToUploadFile
     }
     // One instance of the manager that can be accessed by the app
     static let firebase_manager = FirebaseManager()
@@ -103,6 +108,24 @@ class FirebaseManager {
     func updateProfileImage(photoURL: URL){
         let changeRequest = Auth.auth().currentUser?.createProfileChangeRequest()
         changeRequest?.photoURL = photoURL
+    }
+    
+    func uploadFile(filePath : URL, bucket: String,completion: @escaping(Result<Bool,Error>)->Void){
+        let fileRef = FirebaseManager.storageRef.child(bucket)
+        
+        let uploadTask = fileRef.putFile(from: filePath, metadata: nil) { metadata, err in
+            guard let metadata = metadata else{
+                print(err)
+                completion(.failure(FirebaseAuthError.FailedToUploadFile))
+                return
+            }
+            completion(.success(true))
+        }
+        
+    }
+    
+    func readFile(filePath : URL){
+        
     }
     
     

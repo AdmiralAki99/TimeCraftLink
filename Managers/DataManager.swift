@@ -7,6 +7,20 @@
 
 import Foundation
 
+enum FilePath : String{
+    case ToDoListManager
+    
+    var filePath : URL {
+        switch self{
+        case .ToDoListManager:
+            let filePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+            let path = filePath.appendingPathComponent("tasks.json")
+            return path
+        }
+       
+    }
+}
+
 class DataManager{
     
     enum DataManagerAPIError : Error{
@@ -18,23 +32,6 @@ class DataManager{
     
     enum DataDecodeType{
         case ToDoListManager
-    }
-    
-    enum FilePath : String{
-        case ToDoListManager
-        
-        
-        
-        
-        var filePath : URL {
-            switch self{
-            case .ToDoListManager:
-                let filePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-                let path = filePath.appendingPathComponent("tasks.json")
-                return path
-            }
-           
-        }
     }
     
     static let data_manager = DataManager()
