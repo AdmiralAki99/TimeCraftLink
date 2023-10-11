@@ -97,6 +97,43 @@ class ToDoListViewController: UIViewController {
         ToDoListManager.convertTasksToString()
 
         ToDoListManager.collectionView.reloadData()
+        
+//        do{
+//            print(ToDoListManager.categories[0])
+//            print("=====================")
+//            let encoding =  try JSONEncoder().encode(ToDoListManager.categories[0])
+//            let decoding = try JSONDecoder().decode(ToDoListCategory.self, from: encoding)
+//            print(decoding)
+//        }catch{
+//            print(error.localizedDescription)
+//        }
+        
+        
+//        DataManager.data_manager.encode(with: ToDoListManager.categories[0]) { result in
+//            switch result{
+//            case .success(let data):
+//                do{
+//                    print("Successfully Encoded Data")
+//                    if let filePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first{
+//                        let path = filePath.appendingPathComponent("tasks.json")
+//                        print(path.absoluteString)
+//                        try data.write(to: path)
+//                        print("Successfully Written Data")
+//                        print(try JSONDecoder().decode(ToDoListCategory.self, from: Data(contentsOf: path)))
+//                        print("Successfully Read Data")
+//                    }
+//
+//                }catch{
+//                    print("Failed to write to file")
+//                }
+//            case .failure(let error):
+//                print("Failed to Encode")
+//            }
+//        }
+       
+//        ToDoListManager.toDoList_manager.storeTasks()
+        ToDoListManager.toDoList_manager.readTasksFromFile()
+        FirebaseManager.firebase_manager.uploadFile(filePath: DataManager.FilePath.ToDoListManager.filePath,bucket: "TodoList/tasks.json")
         // Do any additional setup after loading the view.
     }
     
