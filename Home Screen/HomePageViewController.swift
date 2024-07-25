@@ -104,7 +104,7 @@ class HomePageViewController: UIViewController {
     }
     
     func createSections(){
-        home_sections.append(.Category(viewModel: [MapViewController(),PlaybackViewController(),ToDoListViewController()]))
+        home_sections.append(.Category(viewModel: [MapViewController(),PlaybackViewController(),ToDoListViewController(),CalorieCounterViewController()]))
     }
     
     static func generateCollectionView(with sectionIndex : Int) -> NSCollectionLayoutSection{
@@ -138,7 +138,7 @@ class HomePageViewController: UIViewController {
 extension HomePageViewController : UICollectionViewDelegate, UICollectionViewDataSource{
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let section = home_sections[indexPath.section]
-        
+        // update this section
         switch section{
         case .Category(let viewModel):
             guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: CategoryCollectionViewCell.identifier,for: indexPath) as? CategoryCollectionViewCell else{
