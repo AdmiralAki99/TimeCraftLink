@@ -4,93 +4,114 @@ import HealthKit
 class HealthKitManager : ObservableObject{
     static let healthKit = HealthKitManager()
     
-    var healthStore = HKHealthStore()
+    private let healthStore : HKHealthStore?
     
-    var totalWeeklyStepCount : Int = 0
-    var userWeeklySteps : [Int:Int] = [1:0,2:0,3:0,4:0,5:0,6:0,7:0]
-    
-    var intakeCalories : Double = 0.0
-    var burntCalories : Double = 0.0
+    private var totalWeeklyStepCount : Int = 0
+    private var userWeeklySteps : [Int:Int] = [:]
+    private var temp : [Int] = []
+    private var quantityInfo : Set<HKObjectType> = Set([
+        HKObjectType.quantityType(forIdentifier: .stepCount)!,
+        HKObjectType.quantityType(forIdentifier: .distanceCycling)!,
+        HKObjectType.quantityType(forIdentifier: .distanceWalkingRunning)!,
+        HKObjectType.quantityType(forIdentifier: .dietaryCarbohydrates)!,
+        HKObjectType.quantityType(forIdentifier: .dietaryFatTotal)!,
+        HKObjectType.quantityType(forIdentifier: .dietaryProtein)!
+    ])
     
     init(){
-        self.getAuthorization()
-    }
-    //MARK: Function To Get Authorization
-    func getAuthorization(){
-        let permissions = Set([
-            HKObjectType.quantityType(forIdentifier: .stepCount)!,
-            HKObjectType.quantityType(forIdentifier: .distanceWalkingRunning)!,
-            HKObjectType.quantityType(forIdentifier: .distanceCycling)!,
-            HKObjectType.quantityType(forIdentifier: .activeEnergyBurned)!,
-        ])
-        
-        guard HKHealthStore.isHealthDataAvailable() else{
-            print("Health Data Cannot be fetched")
-            return
+        if HKHealthStore.isHealthDataAvailable(){
+            // Health Data is available
+            healthStore = HKHealthStore()
+            requestReadPermission(quantities: self.quantityInfo)
+        }else{
+            // No health data is available so we need to make the store nil. Essentially making this manager useless
+            healthStore = nil
         }
-        
-        healthStore.requestAuthorization(toShare: nil, read: permissions) { res, err in
+    }
+    
+    func requestReadPermission(quantities: Set<HKObjectType>){
+        self.healthStore?.requestAuthorization(toShare: nil, read: quantities, completion: { res, err in
             if res{
-                self.getWeeklySteps()
-                self.getMetrics()
+                self.getStepsSample()
             }else{
-                print("Error: \(String(describing: err))")
+                
             }
-        }
+        })
     }
     
-    func getData(){
-        
-    }
-    
-    func getWeeklySteps(){
-        // Define type of quantity being measured
-        guard let typ = HKQuantityType.quantityType(forIdentifier: .stepCount) else{
+    func getStepsSample(){
+        guard let sampleType = HKSampleType.quantityType(forIdentifier: .stepCount) else{
             return
         }
         
-        let cal = Calendar.current
-        let dayOne = Date()
+        let startDate = Calendar.current.date(from: Calendar.current.dateComponents([.yearForWeekOfYear,.weekOfYear], from: Date()))
         
-        guard let start = Calendar.current.date(from: cal.dateComponents([.yearForWeekOfYear,.weekOfYear], from: dayOne)) else{
-            return
-        }
+        let endDate = Calendar.current.date(byAdding: .day,value: 6, to: Date())
         
-        guard let end = Calendar.current.date(byAdding: .day, value: 6, to: start) else{
-            return
-        }
+        let healthKitPredicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate,options: .strictStartDate)
         
-        let searchCond = HKQuery.predicateForSamples(withStart: start, end: end,options: .strictStartDate)
+        let searchQuery = HKStatisticsCollectionQuery(quantityType: sampleType, quantitySamplePredicate: healthKitPredicate,options: .cumulativeSum, anchorDate: startDate!, intervalComponents: DateComponents(day: 1))
         
-        let searchQuery = HKStatisticsCollectionQuery(quantityType: typ, quantitySamplePredicate: searchCond, options: .cumulativeSum, anchorDate: start, intervalComponents: DateComponents(day:1))
+        // Initial Query Call
         
-        searchQuery.initialResultsHandler = {
-            _,res,err in
-            
-            guard let stat = res else{
-                if let err = err{
-                    print("Error: \(err.localizedDescription)")
-                }
-                return
-            }
-            
-            stat.enumerateStatistics(from: start, to: end) { stats, _ in
-                if let quantity = stats.sumQuantity(){
-                    let steps = Int(quantity.doubleValue(for: HKUnit.count()))
-                    let day = cal.component(.weekday, from: stats.startDate)
-                    self.userWeeklySteps[day] = steps
+        searchQuery.initialResultsHandler = {query,stats,err in
+            if let stats = stats{
+                DispatchQueue.main.async{
+                    var data = []
+                    stats.enumerateStatistics(from: startDate! ,to: endDate!) { stats, _ in
+                        print("Value: \(Int(stats.sumQuantity()?.doubleValue(for: HKUnit.count()) ?? 0.0))")
+                    }
                 }
             }
         }
-        self.healthStore.execute(searchQuery)
-        print("Weekly steps: \(self.userWeeklySteps)")
+        
+        // Backgorund Query Call For Updating Records
+        searchQuery.statisticsUpdateHandler = {query,statistics,statisticsCollection,error in
+            DispatchQueue.main.async{
+                statisticsCollection?.enumerateStatistics(from: startDate!, to: endDate!, with: { stats, _ in
+                     print("Update: \(Int(stats.sumQuantity()?.doubleValue(for: HKUnit.count()) ?? 0.0))")
+                })
+            }
+        }
+        
+        healthStore?.execute(searchQuery)
     }
     
-    func getMetrics(){
-        self.totalWeeklyStepCount = getTotalWeeklyStepCount()
+    func getDistanceCycledSample(){
+        guard let sampleType = HKSampleType.quantityType(forIdentifier: .distanceCycling) else{
+            return
+        }
+        
+        let startDate = Calendar.current.date(from: Calendar.current.dateComponents([.yearForWeekOfYear,.weekOfYear], from: Date()))
+        
+        let endDate = Calendar.current.date(byAdding: .day,value: 6, to: Date())
+        
+        let healthPredicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: .strictEndDate)
+        
+        let searchCollectionsQuery = HKStatisticsCollectionQuery(quantityType: sampleType, quantitySamplePredicate: healthPredicate,options: .cumulativeSum ,anchorDate: startDate!, intervalComponents: DateComponents(day: 1))
+        
+        // Initial Query Search
+        searchCollectionsQuery.initialResultsHandler = {query,stats,err in
+            if let stats = stats{
+                DispatchQueue.main.async{
+                    stats.enumerateStatistics(from: startDate!, to: endDate!) { stats, _ in
+                        print("Distance: \(Int(stats.sumQuantity()?.doubleValue(for: HKUnit.count()) ?? 0.0))")
+                    }
+                }
+            }
+            
+        }
+        
+        searchCollectionsQuery.statisticsUpdateHandler = {query,stats,statisticsCollection,err in
+            statisticsCollection?.enumerateStatistics(from: startDate!, to: endDate!, with: { stats, _ in
+                print("Update Distance: \(Int(stats.sumQuantity()?.doubleValue(for: HKUnit.count()) ?? 0.0))")
+            })
+        }
     }
     
-    func getTotalWeeklyStepCount()->Int{
-        return 50
-    }
+    
+    
+    
+    
+    
 }
