@@ -7,14 +7,9 @@ struct CalorieCounter : View {
     @State private var maxVal = 3000.0
     @State private var currentValue = 2200.0
     
-    @State private var healthKitManager = HealthKitManager.healthKit
+    @State private var healthKitManager : HealthKitManager = HealthKitManager.healthKit
     
-    @State private var activities : [ActivityEntry] = [
-        .init(name: "Bicycle", value: 500),
-        .init(name: "Walking",value:Double(HealthKitManager.healthKit.getTotalWeeklyStepCount())),
-        .init(name: "Rowing", value: 700),
-        .init(name: "Running", value: 800)
-    ]
+    @State private var activities : [ActivityEntry] = []
     
     @State private var nutrition : [NutrionalInformation] = [
         .init(name: "Carbohydrates", value: 100),
@@ -72,7 +67,14 @@ struct CalorieCounter : View {
                 }
             }.frame(minHeight: UIScreen.screenHeight/2,maxHeight: UIScreen.screenHeight/2)
         }.background(Color.black).frame(maxWidth: .infinity).fixedSize(horizontal: false, vertical: false)
-            .preferredColorScheme(.dark)
+            .preferredColorScheme(.dark).onAppear(){
+                print("Distance: \(healthKitManager.userDistanceWalkingRunning)")
+                self.activities = [
+                    .init(name: "Bicycle", value: 500),
+                    .init(name: "Walking",value:Double(healthKitManager.sumStepsInAWeek())),
+                    .init(name: "Rowing", value: 700),
+                    .init(name: "Running", value: 800)]
+            }
     }
 }
 
