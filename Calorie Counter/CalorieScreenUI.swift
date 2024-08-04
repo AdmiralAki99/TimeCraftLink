@@ -11,11 +11,7 @@ struct CalorieCounter : View {
     
     @State private var activities : [ActivityEntry] = []
     
-    @State private var nutrition : [NutrionalInformation] = [
-        .init(name: "Carbohydrates", value: 100),
-        .init(name: "Protein",value: 150),
-        .init(name: "Fat",value: 25)
-    ]
+    @State private var nutrition : [NutrionalInformation] = []
     
     var body: some View {
         VStack{
@@ -68,12 +64,17 @@ struct CalorieCounter : View {
             }.frame(minHeight: UIScreen.screenHeight/2,maxHeight: UIScreen.screenHeight/2)
         }.background(Color.black).frame(maxWidth: .infinity).fixedSize(horizontal: false, vertical: false)
             .preferredColorScheme(.dark).onAppear(){
-                print("Distance: \(healthKitManager.userDistanceWalkingRunning)")
+                print("Value: \(self.healthKitManager.getUserNutritionalCarbohydrate())")
                 self.activities = [
                     .init(name: "Bicycle", value: 500),
-                    .init(name: "Walking",value:Double(healthKitManager.sumStepsInAWeek())),
+                    .init(name: "Walking",value:Double(healthKitManager.sumWalkingRunningDistance())),
                     .init(name: "Rowing", value: 700),
                     .init(name: "Running", value: 800)]
+                self.nutrition = [
+                    .init(name: "Carbohydrates", value: healthKitManager.getUserNutritionalCarbohydrate()),
+                    .init(name: "Protein",value: 150),
+                    .init(name: "Fat",value: 25)
+                ]
             }
     }
 }

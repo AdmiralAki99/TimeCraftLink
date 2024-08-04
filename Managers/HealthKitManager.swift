@@ -9,13 +9,25 @@ import HealthKit
 
 class HealthKitManager : ObservableObject{
     
+    // MARK: Shared Object
     static let healthKit = HealthKitManager()
+    
+    
+    // MARK: Attributes
     
     private let healthStore : HKHealthStore?
     
     private var totalWeeklyStepCount : Int = 0
+    
     @Published private var userWeeklySteps : [Int] = []
-    @Published var userDistanceWalkingRunning: [Double] = []
+    @Published private var userDistanceWalkingRunning: [Double] = []
+    @Published private var userDistanceCycline: [Double] = []
+    
+    @Published private var userNutritionCarbohydrates : Double = 0.0
+    @Published private var userNutritionProtein : Double = 0.0
+    @Published private var userNutritionFat : Double = 0.0
+    @Published private var dailyCaloricalIntake : Double = 0.0
+    @Published private var dailyCaloriesBurnt : Double = 0.0
     
     private var quantityInfo : Set<HKObjectType> = Set([
         HKObjectType.quantityType(forIdentifier: .stepCount)!,
@@ -26,14 +38,18 @@ class HealthKitManager : ObservableObject{
         HKObjectType.quantityType(forIdentifier: .dietaryProtein)!
     ])
     
+    // MARK: Functions
+    
     init(){
         if HKHealthStore.isHealthDataAvailable(){
             // Health Data is available
             healthStore = HKHealthStore()
             _Concurrency.Task{
                 try await requestReadPermission(quantities: quantityInfo)
-                self.getStepCountSample()
+//                self.getStepCountSample()
+//                self.getDistanceCycledSample()
                 self.getWalkingRunningDistanceSample()
+                self.getUserNutritionalCarbohydrateGrams()
             }
         }else{
             // No health data is available so we need to make the store nil. Essentially making this manager useless
@@ -51,7 +67,7 @@ class HealthKitManager : ObservableObject{
         })
     }
     
-    func getStepCountSample(){
+    private func getStepCountSample(){
         guard let sampleType = HKSampleType.quantityType(forIdentifier: .stepCount) else{
             return
         }
@@ -92,45 +108,48 @@ class HealthKitManager : ObservableObject{
         healthStore?.execute(searchQuery)
     }
     
-    func getWalkingRunningDistanceSample(){
-        print("Getting Walking Running Distance")
-        
+    private func getWalkingRunningDistanceSample(){
         guard let sampleType = HKSampleType.quantityType(forIdentifier: .distanceWalkingRunning) else{
             return
         }
         
-        let startDate = Calendar.current.date(byAdding: .day, value: -6, to: Date())
-        
         let endDate = Calendar.current.date(from: Calendar.current.dateComponents([.yearForWeekOfYear,.weekOfYear], from: Date()))
         
-        let runningWalkingPred = HKQuery.predicateForSamples(withStart: startDate, end: endDate,options: .strictStartDate)
+        let startDate = Calendar.current.date(byAdding: .day,value: -6, to: Date())
         
-        let searchCollectionsQuery = HKStatisticsCollectionQuery(quantityType: sampleType, quantitySamplePredicate: runningWalkingPred, anchorDate: startDate!, intervalComponents: DateComponents(day: 1))
+        let healthKitPredicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate,options: .strictStartDate)
         
-        searchCollectionsQuery.initialResultsHandler = {query,stats,err in
-            if let res = stats{
+        let searchQuery = HKStatisticsCollectionQuery(quantityType: sampleType, quantitySamplePredicate: healthKitPredicate,options: .cumulativeSum, anchorDate: startDate!, intervalComponents: DateComponents(day: 1))
+        
+        // Initial Query Call
+        
+        searchQuery.initialResultsHandler = {query,stats,err in
+            if let stats = stats{
                 DispatchQueue.main.async{
-                    res.enumerateStatistics(from: startDate!, to: endDate!) { statistics, _ in
-                        let distance = statistics.sumQuantity()?.doubleValue(for: HKUnit.count())
-                        print("Initial Distance: \(distance)")
-                        self.userDistanceWalkingRunning.append(distance ?? 0.0)
+                    stats.enumerateStatistics(from: startDate! ,to: endDate!) { stats, _ in
+                        DispatchQueue.main.async{
+                            self.userDistanceWalkingRunning.append(Double(stats.sumQuantity()?.doubleValue(for: HKUnit.meter()) ?? 0.0))
+                        }
                     }
                 }
             }
         }
         
-        searchCollectionsQuery.statisticsUpdateHandler = {query,stats,statsCollection,err in
-            statsCollection?.enumerateStatistics(from: startDate!, to: endDate!, with: { stats, _ in
-                DispatchQueue.main.async{
-                    print("Update: \(Int(stats.sumQuantity()?.doubleValue(for: HKUnit.count()) ?? 0.0))")
-                }
-            })
+        // Backgorund Query Call For Updating Records
+        searchQuery.statisticsUpdateHandler = {query,statistics,statisticsCollection,error in
+            DispatchQueue.main.async{
+                statisticsCollection?.enumerateStatistics(from: startDate!, to: endDate!, with: { stats, _ in
+                    DispatchQueue.main.async{
+                        self.userDistanceWalkingRunning.append(Double(stats.sumQuantity()?.doubleValue(for: HKUnit.meter()) ?? 0.0))
+                    }
+                })
+            }
         }
         
-        healthStore?.execute(searchCollectionsQuery)
+        healthStore?.execute(searchQuery)
     }
     
-    func getDistanceCycledSample(){
+    private func getDistanceCycledSample(){
         guard let sampleType = HKSampleType.quantityType(forIdentifier: .distanceCycling) else{
             return
         }
@@ -160,6 +179,46 @@ class HealthKitManager : ObservableObject{
                 print("Update Distance: \(Int(stats.sumQuantity()?.doubleValue(for: HKUnit.count()) ?? 0.0))")
             })
         }
+        
+        healthStore?.execute(searchCollectionsQuery)
+    }
+    
+    private func getUserNutritionalCarbohydrateGrams(){
+        guard let sampleType = HKSampleType.quantityType(forIdentifier: .dietaryCarbohydrates) else{
+            return
+        }
+        
+        let endDate = Calendar.current.date(from: Calendar.current.dateComponents([.yearForWeekOfYear,.weekOfYear], from: Date()))
+        
+        let startDate = Calendar.current.date(byAdding: .day,value: -1, to: Date())
+        
+        let healthKitPredicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate,options: .strictStartDate)
+        
+        let searchQuery = HKStatisticsCollectionQuery(quantityType: sampleType, quantitySamplePredicate: healthKitPredicate,options: .cumulativeSum, anchorDate: startDate!, intervalComponents: DateComponents(day: 1))
+        
+        // Initial Query Call
+        
+        searchQuery.initialResultsHandler = {query,stats,err in
+            if let stats = stats{
+                DispatchQueue.main.async{
+                    stats.enumerateStatistics(from: startDate! ,to: endDate!) { stats, _ in
+                        self.userNutritionCarbohydrates = Double(stats.sumQuantity()?.doubleValue(for: .gram()) ?? 0.0)
+                    }
+                }
+            }
+        }
+        
+        // Backgorund Query Call For Updating Records
+        searchQuery.statisticsUpdateHandler = {query,statistics,statisticsCollection,error in
+            DispatchQueue.main.async{
+                var sum = 0.0
+                statisticsCollection?.enumerateStatistics(from: startDate!, to: endDate!, with: { stats, _ in
+                    self.userNutritionCarbohydrates = Double(stats.sumQuantity()?.doubleValue(for: .gram()) ?? 0.0)
+                })
+            }
+        }
+        
+        healthStore?.execute(searchQuery)
     }
     
     func sumStepsInAWeek() -> Int{
@@ -168,6 +227,10 @@ class HealthKitManager : ObservableObject{
     
     func sumWalkingRunningDistance() -> Int{
         return Int(self.userDistanceWalkingRunning.reduce(0, +))
+    }
+    
+    func getUserNutritionalCarbohydrate() -> Double{
+        return self.userNutritionCarbohydrates
     }
     
     
