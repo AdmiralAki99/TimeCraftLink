@@ -21,7 +21,7 @@ class HealthKitManager : ObservableObject{
     
     @Published private var userWeeklySteps : [Int] = []
     @Published private var userDistanceWalkingRunning: [Double] = []
-    @Published private var userDistanceCycline: [Double] = []
+    @Published private var userDistanceCycling: [Double] = []
     
     @Published private var userNutritionCarbohydrates : Double = 0.0
     @Published private var userNutritionProtein : Double = 0.0
@@ -46,10 +46,11 @@ class HealthKitManager : ObservableObject{
             healthStore = HKHealthStore()
             _Concurrency.Task{
                 try await requestReadPermission(quantities: quantityInfo)
-//                self.getStepCountSample()
-//                self.getDistanceCycledSample()
+                self.getStepCountSample()
+                self.getDistanceCycledSample()
                 self.getWalkingRunningDistanceSample()
                 self.getUserNutritionalCarbohydrateGrams()
+                try await self.sendDataToWatch()
             }
         }else{
             // No health data is available so we need to make the store nil. Essentially making this manager useless
@@ -167,7 +168,7 @@ class HealthKitManager : ObservableObject{
             if let stats = stats{
                 DispatchQueue.main.async{
                     stats.enumerateStatistics(from: startDate!, to: endDate!) { stats, _ in
-                        print("Distance: \(Int(stats.sumQuantity()?.doubleValue(for: HKUnit.count()) ?? 0.0))")
+                        self.userDistanceCycling.append(Double(stats.sumQuantity()?.doubleValue(for: HKUnit.count()) ?? 0.0))
                     }
                 }
             }
@@ -221,6 +222,74 @@ class HealthKitManager : ObservableObject{
         healthStore?.execute(searchQuery)
     }
     
+    private func getUserNutrionalProteinSample(){
+        guard let sampleType = HKSampleType.quantityType(forIdentifier: .dietaryProtein) else{
+            return
+        }
+        
+        let endDate = Calendar.current.date(from: Calendar.current.dateComponents([.yearForWeekOfYear,.weekOfYear], from: Date()))
+        
+        let startDate = Calendar.current.date(byAdding: .day,value: -1, to: Date())
+        
+        let healthPredicate = HKQuery.predicateForSamples(withStart: startDate!, end: endDate!, options: .strictStartDate)
+        
+        let searchQuery = HKStatisticsCollectionQuery(quantityType: sampleType, quantitySamplePredicate: healthPredicate, anchorDate: startDate!, intervalComponents: DateComponents(day: 1))
+        
+        searchQuery.initialResultsHandler = {query,stats,err in
+            if let stats = stats{
+                stats.enumerateStatistics(from: startDate!, to: endDate!) { stats, _ in
+                    DispatchQueue.main.async{
+                        self.userNutritionProtein = Double(stats.sumQuantity()?.doubleValue(for: .gram()) ?? 0.0)
+                    }
+                }
+            }
+        }
+        
+        searchQuery.statisticsUpdateHandler = {query,stats,statisticsCollection,err in
+            DispatchQueue.main.async{
+                statisticsCollection?.enumerateStatistics(from: startDate!, to: endDate!, with: { stats, _ in
+                    self.userNutritionProtein = Double(stats.sumQuantity()?.doubleValue(for: .gram()) ?? 0.0)
+                })
+            }
+        }
+        
+        healthStore?.execute(searchQuery)
+    }
+    
+    private func getUserNutritionalFatSample(){
+        guard let sampleType = HKSampleType.quantityType(forIdentifier: .dietaryProtein) else{
+            return
+        }
+        
+        let endDate = Calendar.current.date(from: Calendar.current.dateComponents([.yearForWeekOfYear,.weekOfYear], from: Date()))
+        
+        let startDate = Calendar.current.date(byAdding: .day,value: -1, to: Date())
+        
+        let healthPredicate = HKQuery.predicateForSamples(withStart: startDate!, end: endDate!, options: .strictStartDate)
+        
+        let searchQuery = HKStatisticsCollectionQuery(quantityType: sampleType, quantitySamplePredicate: healthPredicate, anchorDate: startDate!, intervalComponents: DateComponents(day: 1))
+        
+        searchQuery.initialResultsHandler = {query,stats,err in
+            if let stats = stats{
+                stats.enumerateStatistics(from: startDate!, to: endDate!) { stats, _ in
+                    DispatchQueue.main.async{
+                        self.userNutritionFat = Double(stats.sumQuantity()?.doubleValue(for: .gram()) ?? 0.0)
+                    }
+                }
+            }
+        }
+        
+        searchQuery.statisticsUpdateHandler = {query,stats,statisticsCollection,err in
+            DispatchQueue.main.async{
+                statisticsCollection?.enumerateStatistics(from: startDate!, to: endDate!, with: { stats, _ in
+                    self.userNutritionFat = Double(stats.sumQuantity()?.doubleValue(for: .gram()) ?? 0.0)
+                })
+            }
+        }
+        
+        healthStore?.execute(searchQuery)
+    }
+    
     func sumStepsInAWeek() -> Int{
         return self.userWeeklySteps.reduce(0, +)
     }
@@ -229,13 +298,25 @@ class HealthKitManager : ObservableObject{
         return Int(self.userDistanceWalkingRunning.reduce(0, +))
     }
     
+    func sumCyclingDistance() -> Int{
+        return Int(self.userDistanceCycling.reduce(0, +))
+    }
+    
     func getUserNutritionalCarbohydrate() -> Double{
         return self.userNutritionCarbohydrates
     }
     
+    func getUserNutritionalProtein() -> Double{
+        return self.userNutritionProtein
+    }
     
+    func getUserNutritionalFat() -> Double{
+        return self.userNutritionFat
+    }
     
-    
-    
+    func sendDataToWatch(){
+        let message = "CalIntake:\(self.dailyCaloricalIntake);CalBurn:\(self.dailyCaloriesBurnt);WalkRunDis:\(self.sumWalkingRunningDistance());CyclingDis:\(self.sumCyclingDistance())"
+        BluetoothManager.bluetooth_manager.sendMessage(message: message, characteristic: .NutritionalInfoChar)
+    }
     
 }
