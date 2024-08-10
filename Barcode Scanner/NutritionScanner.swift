@@ -11,194 +11,232 @@ import Vision
 import SwiftUI
 import VisionKit
 
-class NutrionManager : NSObject{
-    
-    static let nutritionManager = NutrionManager()
-    
-    struct API{
-        static let apiURL = "https://api.nal.usda.gov/fdc/v1"
-    }
-    
-    enum APIResponseError : Error{
-        case FailedToGetData
-        case AuthenticationError
-        case NoFoodHits
-    }
-    
-    enum HTTPResp : String{
-        case GET
-        case POST
-        case PUT
-    }
-    
-    override init(){
+class NutritionScreenViewController : UIViewController{
+    override func viewDidLoad() {
+        overrideUserInterfaceStyle = .dark
+        let vc = UIHostingController(rootView: CameraScanner(navigationController:navigationController))
+        let camView = vc.view!
+        camView.translatesAutoresizingMaskIntoConstraints = false
+//        camView.backgroundColor = .clear
+        addChild(vc)
+        view.addSubview(camView)
         
-    }
-    
-    func searchBarcodeID(with barcodeNumber: String,completion: @escaping (Result<Food,Error>)->Void){
-        guard let url = URL(string: "\(API.apiURL)/foods/search?api_key=Fb4ewYXWfglKqzNXndfKc9G16rAyqbi71h0VcSiI&query=\(barcodeNumber)") else{
-            return
-        }
-        
-        let apiTask = URLSession.shared.dataTask(with: url) { data, resp, err in
-            guard let data = data , err == nil else{
-                completion(.failure(APIResponseError.FailedToGetData))
-                return
-            }
-            do{
-                var data = try JSONDecoder().decode(FoodRequest.self, from: data)
-                
-                if data.totalHits == 0{
-                    completion(.failure(APIResponseError.NoFoodHits))
-                }
-                
-                completion(.success(data.foods[0]))
-            }catch{
-                print("Barcode Search Info: \(String(describing: err?.localizedDescription))")
-                completion(.failure(error))
-            }
-        }
-        
-        apiTask.resume()
-        
-    }
-    
-    func searchFoodList(with foodName: String){
-        
-    }
-    
-}
+        NSLayoutConstraint.activate([camView.centerXAnchor.constraint(equalTo: view.centerXAnchor),camView.centerYAnchor.constraint(equalTo: view.centerYAnchor), camView.widthAnchor.constraint(equalToConstant: view.bounds.width),camView.heightAnchor.constraint(equalToConstant: view.bounds.height)])
 
-struct NutritionScannerScreen : View {
-    var body: some View {
-        CameraScanner()
+    }
+    
+    override func viewDidLayoutSubviews() {
+        
     }
 }
-
-//struct BarcodeScanner : View {
-//    
-//    @State private var captureSession: AVCaptureSession?
-//    @State private var previewLayer: AVCaptureVideoPreviewLayer?
-//    
-//    func startCapture(){
-//        guard let device = AVCaptureDevice.default(for: .video) else{
-//            return
-//        }
-//        do{
-//            let input = try AVCaptureDeviceInput(device: device)
-//            captureSession = AVCaptureSession()
-//            captureSession?.addInput(input)
-//            previewLayer = AVCaptureVideoPreviewLayer(session: captureSession!)
-//            previewLayer?.videoGravity = .resizeAspectFill
-//            previewLayer?.frame = CGRect(x: 0, y: 0, width: UIScreen.screenWidth, height: UIScreen.screenHeight)
-//            captureSession?.startRunning()
-//        }catch{
-//            print(String(describing: error))
-//        }
-//    }
-//    
-//    var body: some View {
-//        ZStack{
-//            CameraView(captureSession: $captureSession, previewLayer: $previewLayer)
-//        }.onAppear(){
-//            startCapture()
-//        }.onDisappear(){
-//            captureSession?.stopRunning()
-//        }
-//    }
-//}
-//
-//struct CameraView: UIViewRepresentable{
-//    @Binding var captureSession: AVCaptureSession?
-//    @Binding var previewLayer: AVCaptureVideoPreviewLayer?
-//    
-//    func makeUIView(context: Context) -> some UIView {
-//        let view = UIView()
-//        view.backgroundColor = .clear
-//        return view
-//    }
-//    
-//    func updateUIView(_ uiView: UIViewType, context: Context) {
-//        previewLayer?.removeFromSuperlayer()
-//        if let previewLayer = previewLayer{
-//            uiView.layer.addSublayer(previewLayer)
-//        }
-//    }
-//}
 
 struct CameraScanner : View {
     @State private var barcodeResult : String = ""
     @State private var isScanning : Bool = true
+    private var navigationController : UINavigationController?
+    
+    private var macroColors: [Color] = [Color.pink,Color.cyan,Color.green]
+    
+    init(navigationController: UINavigationController? = nil) {
+        self.navigationController = navigationController
+    }
     
     var body: some View {
-        NavigationView{
-            BarcodeScannerViewController(isScanning: $isScanning, barcodeText: $barcodeResult)
+        ZStack(alignment: .bottom){
+            VStack(alignment: .center){
+                ScrollView{
+                    HStack{
+                        NutritionChartCard()
+                    }.padding(EdgeInsets(top: 10, leading: 0, bottom: 10, trailing: 0))
+                    HStack{
+                        NutrientMacroTracker(macroColors: self.macroColors)
+                    }.padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10))
+                    VStack{
+                        List{
+                            SwiftUI.Section(header: NutiritionSectionHeader(macroColors: self.macroColors)) {
+                                Text("List Item")
+                                Text("List Item")
+                                Text("List Item")
+                                HStack(alignment:.center){
+                                    Button("+ Add"){
+                                        
+                                    }.frame(maxWidth: .infinity,alignment:.leading).padding(EdgeInsets(top: 0, leading: 30, bottom: 0, trailing: 0)).tint(Color.pink)
+                                    Spacer()
+                                    Button(){
+                                        
+                                    }label: {
+                                        Label(
+                                            title: { },
+                                            icon: { Image(systemName: "ellipsis").foregroundColor(Color.pink)}
+                                        )
+                                    }
+                                }
+                            }
+                        }.frame(height: 250).cornerRadius(10)
+                    }.padding(EdgeInsets(top: 10, leading: 0, bottom: 0, trailing: 0))
+                    VStack{
+                        List{
+                            SwiftUI.Section(header: NutiritionSectionHeader(macroColors: self.macroColors)) {
+                                Text("List Item")
+                                Text("List Item")
+                                Text("List Item")
+                                HStack(alignment:.center){
+                                    Button("+ Add"){
+                                        
+                                    }.frame(maxWidth: .infinity,alignment:.leading).padding(EdgeInsets(top: 0, leading: 30, bottom: 0, trailing: 0)).tint(Color.pink)
+                                    Spacer()
+                                    Button(){
+                                        
+                                    }label: {
+                                        Label(
+                                            title: { },
+                                            icon: { Image(systemName: "ellipsis").foregroundColor(Color.pink)}
+                                        )
+                                    }
+                                }
+                            }
+                        }.frame(height: 250).cornerRadius(10)
+                    }.padding(EdgeInsets(top: 0, leading: 0, bottom: 10, trailing: 0))
+                    VStack{
+                        List{
+                            SwiftUI.Section(header: NutiritionSectionHeader(macroColors: self.macroColors)) {
+                                Text("List Item")
+                                Text("List Item")
+                                Text("List Item")
+                                HStack(alignment:.center){
+                                    Button("+ Add"){
+                                        
+                                    }.frame(maxWidth: .infinity,alignment:.leading).padding(EdgeInsets(top: 0, leading: 30, bottom: 0, trailing: 0)).tint(Color.pink)
+                                    Spacer()
+                                    Button(){
+                                        
+                                    }label: {
+                                        Label(
+                                            title: { },
+                                            icon: { Image(systemName: "ellipsis").foregroundColor(Color.pink)}
+                                        )
+                                    }
+                                }
+                            }
+                        }.frame(height: 250).cornerRadius(10)
+                    }.padding(EdgeInsets(top: 10, leading: 0, bottom: 10, trailing: 0))
+                }
+                
+            }
+            HStack(alignment: .center){
+                Button(){
+                    
+                }label: {
+                    Label(
+                        title: { Text("") },
+                        icon: { Image(systemName: "plus").tint(Color.white) }
+                    )
+                }.padding(EdgeInsets(top: 5, leading: 10, bottom: 5, trailing: 5))
+                Button(){
+                    navigationController?.pushViewController(BarcodeScannerViewController(barcodeResult: barcodeResult, isScanning: isScanning), animated: false)
+                }label: {
+                    Label(
+                        title: { Text("") },
+                        icon: { Image(systemName: "barcode.viewfinder").tint(Color.white)  }
+                    )
+                }.padding(EdgeInsets(top: 5, leading: 5, bottom: 5, trailing: 5))
+                Button(){
+                    
+                }label: {
+                    Label(
+                        title: { Text("") },
+                        icon: { Image(systemName: "gearshape").tint(Color.white)  }
+                    )
+                }.padding(EdgeInsets(top: 5, leading: 5, bottom: 5, trailing: 5))
+                Button(){
+                    
+                }label: {
+                    Label(
+                        title: { Text("") },
+                        icon: { Image(systemName: "pencil").tint(Color.white) }
+                    )
+                }.padding(EdgeInsets(top: 5, leading: 5, bottom: 5, trailing: 5))
+            }.background(Color.pink.opacity(0.5)).cornerRadius(15.0).frame(height: 20)
         }
     }
 }
 
-struct BarcodeScannerViewController : UIViewControllerRepresentable{
+class BarcodeScannerViewController: UIViewController{
     
-    @Binding var isScanning: Bool
-    @Binding var barcodeText: String
+    private var barcodeResult : String = ""
+    private var isScanning : Bool = true
+    private var dataScanner : DataScannerViewController?
     
-    func makeUIViewController(context: Context) -> DataScannerViewController {
-        let vc = DataScannerViewController(recognizedDataTypes: [.barcode()], qualityLevel: .fast, recognizesMultipleItems: false, isHighFrameRateTrackingEnabled: false, isPinchToZoomEnabled: true, isGuidanceEnabled: false, isHighlightingEnabled: true)
-        
-        vc.delegate = context.coordinator
-        
-        return vc
+    init(barcodeResult: String, isScanning: Bool) {
+        super.init(nibName: nil, bundle: nil)
+        self.barcodeResult = barcodeResult
+        self.isScanning = isScanning
     }
     
-    func updateUIViewController(_ uiViewController: DataScannerViewController, context: Context) {
-        if isScanning{
-            do{
-                try uiViewController.startScanning()
-            }catch{
-                fatalError("Cannot Start Scanning: \(String(describing: error))")
-            }
-        }else{
-            uiViewController.stopScanning()
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func viewDidLoad() {
+        self.dataScanner = DataScannerViewController(recognizedDataTypes: [.barcode()], qualityLevel: .fast, recognizesMultipleItems: false, isHighFrameRateTrackingEnabled: false, isPinchToZoomEnabled: true, isGuidanceEnabled: false, isHighlightingEnabled: true)
+        dataScanner?.delegate = self
+        guard let scannerView = dataScanner?.view! else{
+            fatalError()
+        }
+        scannerView.translatesAutoresizingMaskIntoConstraints = false
+        
+        guard let dataScanner = dataScanner else{
+            fatalError()
+        }
+        addChild(dataScanner)
+        view.addSubview(scannerView)
+        
+        NSLayoutConstraint.activate([scannerView.centerXAnchor.constraint(equalTo: view.centerXAnchor),scannerView.centerYAnchor.constraint(equalTo: view.centerYAnchor), scannerView.widthAnchor.constraint(equalToConstant: view.bounds.width),scannerView.heightAnchor.constraint(equalToConstant: view.bounds.height)])
+        startScanning()
+        
+    }
+    
+    override func viewDidLayoutSubviews() {
+        
+    }
+    
+    func startScanning(){
+        do{
+            try dataScanner?.startScanning()
+        }catch{
+            fatalError("Cannot Start Scanning: \(String(describing: error))")
         }
     }
     
-    func makeCoordinator() -> Coordinator {
-        Coordinator(parent: self)
+    func stopScanning(){
+        dataScanner?.stopScanning()
     }
-    
-    class Coordinator : DataScannerViewControllerDelegate{
-        
-        var parent : BarcodeScannerViewController
-        
-        init(parent: BarcodeScannerViewController) {
-            self.parent = parent
-        }
-        
-        func dataScanner(_ dataScanner: DataScannerViewController, didTapOn item: RecognizedItem) {
-            switch item{
-            case .barcode(let barcode):
-                self.parent.barcodeText = barcode.payloadStringValue ?? ""
-                print("Barcode Text Scanned : \(parent.barcodeText)")
-                _Concurrency.Task{
-                    NutritionManager.nutritionManager.searchBarcodeID(with: String(String(parent.barcodeText).dropFirst())) { res in
-                        switch res{
-                        case .success(let food):
-                            print(food)
-                            break
-                        case .failure(let error):
-                            print(error)
-                            break
-                        }
+}
+
+extension BarcodeScannerViewController : DataScannerViewControllerDelegate{
+    func dataScanner(_ dataScanner: DataScannerViewController, didTapOn item: RecognizedItem) {
+        switch item{
+        case .barcode(let barcode):
+            self.barcodeResult = barcode.payloadStringValue ?? ""
+            print("Barcode Text Scanned : \(self.barcodeResult)")
+            _Concurrency.Task{
+                NutritionManager.nutritionManager.searchBarcodeID(with: String(String(self.barcodeResult).dropFirst())) { res in
+                    switch res{
+                    case .success(let food):
+                        print(food)
+                        break
+                    case .failure(let error):
+                        print(error)
+                        break
                     }
                 }
-                break
-            case .text(let text):
-                self.parent.barcodeText = text.transcript
-                break
-            default:
-                break
             }
+            break
+        case .text(let text):
+            self.barcodeResult = text.transcript
+            break
+        default:
+            break
         }
     }
-    
 }
