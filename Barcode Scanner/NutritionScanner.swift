@@ -54,13 +54,13 @@ struct CameraScanner : View {
                     VStack{
                         List{
                             SwiftUI.Section(header: NutiritionSectionHeader(macroColors: self.macroColors)) {
-                                Text("List Item")
-                                Text("List Item")
-                                Text("List Item")
+                                FoodItemListCell(navigationController: navigationController!)
+                                FoodItemListCell(navigationController: navigationController!)
+                                FoodItemListCell(navigationController: navigationController!)
                                 HStack(alignment:.center){
                                     Button("+ Add"){
                                         
-                                    }.frame(maxWidth: .infinity,alignment:.leading).padding(EdgeInsets(top: 0, leading: 30, bottom: 0, trailing: 0)).tint(Color.pink)
+                                    }.frame(maxWidth: .infinity,alignment:.leading).padding(EdgeInsets(top: 0, leading: 10, bottom: 0, trailing: 0)).tint(Color.pink)
                                     Spacer()
                                     Button(){
                                         
@@ -69,21 +69,21 @@ struct CameraScanner : View {
                                             title: { },
                                             icon: { Image(systemName: "ellipsis").foregroundColor(Color.pink)}
                                         )
-                                    }
+                                    }.padding(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 10))
                                 }
                             }
-                        }.frame(height: 250).cornerRadius(10)
+                        }.frame(height: 275).cornerRadius(10)
                     }.padding(EdgeInsets(top: 10, leading: 0, bottom: 0, trailing: 0))
                     VStack{
                         List{
                             SwiftUI.Section(header: NutiritionSectionHeader(macroColors: self.macroColors)) {
-                                Text("List Item")
-                                Text("List Item")
-                                Text("List Item")
+                                FoodItemListCell(navigationController: navigationController!)
+                                FoodItemListCell(navigationController: navigationController!)
+                                FoodItemListCell(navigationController: navigationController!)
                                 HStack(alignment:.center){
                                     Button("+ Add"){
                                         
-                                    }.frame(maxWidth: .infinity,alignment:.leading).padding(EdgeInsets(top: 0, leading: 30, bottom: 0, trailing: 0)).tint(Color.pink)
+                                    }.frame(maxWidth: .infinity,alignment:.leading).padding(EdgeInsets(top: 0, leading: 10, bottom: 0, trailing: 0)).tint(Color.pink)
                                     Spacer()
                                     Button(){
                                         
@@ -92,21 +92,21 @@ struct CameraScanner : View {
                                             title: { },
                                             icon: { Image(systemName: "ellipsis").foregroundColor(Color.pink)}
                                         )
-                                    }
+                                    }.padding(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 10))
                                 }
                             }
-                        }.frame(height: 250).cornerRadius(10)
-                    }.padding(EdgeInsets(top: 0, leading: 0, bottom: 10, trailing: 0))
+                        }.frame(height: 275).cornerRadius(10)
+                    }.padding(EdgeInsets(top: 10, leading: 0, bottom: 0, trailing: 0))
                     VStack{
                         List{
                             SwiftUI.Section(header: NutiritionSectionHeader(macroColors: self.macroColors)) {
-                                Text("List Item")
-                                Text("List Item")
-                                Text("List Item")
+                                FoodItemListCell(navigationController: navigationController!)
+                                FoodItemListCell(navigationController: navigationController!)
+                                FoodItemListCell(navigationController: navigationController!)
                                 HStack(alignment:.center){
                                     Button("+ Add"){
                                         
-                                    }.frame(maxWidth: .infinity,alignment:.leading).padding(EdgeInsets(top: 0, leading: 30, bottom: 0, trailing: 0)).tint(Color.pink)
+                                    }.frame(maxWidth: .infinity,alignment:.leading).padding(EdgeInsets(top: 0, leading: 10, bottom: 0, trailing: 0)).tint(Color.pink)
                                     Spacer()
                                     Button(){
                                         
@@ -115,11 +115,11 @@ struct CameraScanner : View {
                                             title: { },
                                             icon: { Image(systemName: "ellipsis").foregroundColor(Color.pink)}
                                         )
-                                    }
+                                    }.padding(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 10))
                                 }
                             }
-                        }.frame(height: 250).cornerRadius(10)
-                    }.padding(EdgeInsets(top: 10, leading: 0, bottom: 10, trailing: 0))
+                        }.frame(height: 275).cornerRadius(10)
+                    }.padding(EdgeInsets(top: 10, leading: 0, bottom: 0, trailing: 0))
                 }
                 
             }
@@ -224,6 +224,12 @@ extension BarcodeScannerViewController : DataScannerViewControllerDelegate{
                     switch res{
                     case .success(let food):
                         print(food)
+                        DispatchQueue.main.async{
+                            let vc = FoodItemScannedViewController()
+                            vc.modalPresentationStyle = .formSheet
+                            vc.preferredContentSize = .init(width: UIScreen.screenWidth/3, height: UIScreen.screenHeight/3)
+                            self.present(vc,animated:true)
+                        }
                         break
                     case .failure(let error):
                         print(error)

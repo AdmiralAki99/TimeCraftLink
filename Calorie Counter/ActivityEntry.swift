@@ -12,3 +12,9 @@ struct ActivityEntry : Identifiable{
     let name: String
     let value : Double
 }
+
+struct NutrionalInformation : Identifiable{
+    let id = UUID()
+    let name : String
+    let value: Double
+}
