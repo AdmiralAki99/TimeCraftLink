@@ -125,7 +125,7 @@ struct CameraScanner : View {
             }
             HStack(alignment: .center){
                 Button(){
-                    
+                    navigationController?.pushViewController(FoodItemViewController(), animated: true)
                 }label: {
                     Label(
                         title: { Text("") },
@@ -225,10 +225,7 @@ extension BarcodeScannerViewController : DataScannerViewControllerDelegate{
                     case .success(let food):
                         print(food)
                         DispatchQueue.main.async{
-                            let vc = FoodItemScannedViewController()
-                            vc.modalPresentationStyle = .formSheet
-                            vc.preferredContentSize = .init(width: UIScreen.screenWidth/3, height: UIScreen.screenHeight/3)
-                            self.present(vc,animated:true)
+                            self.navigationController?.pushViewController(FoodItemScannedViewController(scannedFoodItem: food), animated: true)
                         }
                         break
                     case .failure(let error):
