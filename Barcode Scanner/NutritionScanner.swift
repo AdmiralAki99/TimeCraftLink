@@ -156,7 +156,7 @@ struct CameraScanner : View {
                         icon: { Image(systemName: "pencil").tint(Color.white) }
                     )
                 }.padding(EdgeInsets(top: 5, leading: 5, bottom: 5, trailing: 5))
-            }.background(Color.pink.opacity(0.5)).cornerRadius(15.0).frame(height: 20)
+            }.background(Color.pink.opacity(0.5)).frame(height: 50).clipShape(Capsule())
         }
     }
 }
@@ -223,7 +223,6 @@ extension BarcodeScannerViewController : DataScannerViewControllerDelegate{
                 NutritionManager.nutritionManager.searchBarcodeID(with: String(String(self.barcodeResult).dropFirst())) { res in
                     switch res{
                     case .success(let food):
-                        print(food)
                         DispatchQueue.main.async{
                             self.navigationController?.pushViewController(FoodItemScannedViewController(scannedFoodItem: food), animated: true)
                         }

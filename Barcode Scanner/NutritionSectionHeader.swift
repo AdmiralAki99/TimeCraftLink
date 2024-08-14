@@ -17,18 +17,18 @@ struct NutiritionSectionHeader : View {
     
     var body: some View {
         HStack{
-            Text("Title").frame(maxWidth: .infinity,alignment: .leading).foregroundColor(Color(UIColor.label)).bold()
+            Text("Title").fixedSize().frame(maxWidth: .infinity,alignment: .leading).foregroundColor(Color(UIColor.label)).bold()
             HStack{
                 Text("P").font(.caption2).background(Circle().fill(macroColors[0]).frame(width: 13,height: 13)).foregroundColor(Color.white)
-                Text("15")
+                Text("15").fixedSize()
                 Spacer()
                 Text("C").font(.caption2).background(Circle().fill(macroColors[1]).frame(width: 13,height: 13)).foregroundColor(Color.white)
-                Text("15")
+                Text("15").fixedSize()
                 Spacer()
                 Text("F").font(.caption2).background(Circle().fill(macroColors[2]).frame(width: 13,height: 13)).foregroundColor(Color.white)
-                Text("15")
+                Text("15").fixedSize()
                 Spacer()
-                Text("474 Cal").bold().lineLimit(1)
+                Text("474 Cal").fixedSize().lineLimit(1)
             }
         }.background(Color.clear)
     }
