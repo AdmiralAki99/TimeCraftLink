@@ -62,7 +62,7 @@ struct CameraScanner : View {
                     }.padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10))
                     VStack{
                         List{
-                            SwiftUI.Section(header: NutiritionSectionHeader(macroColors: self.macroColors)) {
+                            SwiftUI.Section(header: NutiritionSectionHeader(macroColors: self.macroColors, title: "Breakfast")) {
                                 if self.breakfastMeals.isEmpty{
                                     Text("No Meals Entered....").foregroundColor(Color(UIColor.secondaryLabel))
                                 }
@@ -93,7 +93,7 @@ struct CameraScanner : View {
                     }.padding(EdgeInsets(top: 10, leading: 0, bottom: 0, trailing: 0))
                     VStack{
                         List{
-                            SwiftUI.Section(header: NutiritionSectionHeader(macroColors: self.macroColors)) {
+                            SwiftUI.Section(header: NutiritionSectionHeader(macroColors: self.macroColors, title: "Lunch")) {
                                 if self.lunchMeals.isEmpty{
                                     Text("No Meals Entered....").foregroundColor(Color(UIColor.secondaryLabel))
                                 }
@@ -123,7 +123,7 @@ struct CameraScanner : View {
                     }.padding(EdgeInsets(top: 10, leading: 0, bottom: 0, trailing: 0))
                     VStack{
                         List{
-                            SwiftUI.Section(header: NutiritionSectionHeader(macroColors: self.macroColors)) {
+                            SwiftUI.Section(header: NutiritionSectionHeader(macroColors: self.macroColors, title: "Dinner")) {
                                 if self.dinnerMeals.isEmpty{
                                     Text("No Meals Entered....").foregroundColor(Color(UIColor.secondaryLabel))
                                 }
@@ -153,7 +153,7 @@ struct CameraScanner : View {
                     }.padding(EdgeInsets(top: 10, leading: 0, bottom: 0, trailing: 0))
                     VStack{
                         List{
-                            SwiftUI.Section(header: NutiritionSectionHeader(macroColors: self.macroColors)) {
+                            SwiftUI.Section(header: NutiritionSectionHeader(macroColors: self.macroColors, title: "Snack")) {
                                 if self.snackMeals.isEmpty{
                                     Text("No Meals Entered....").foregroundColor(Color(UIColor.secondaryLabel))
                                 }
