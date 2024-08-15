@@ -33,12 +33,21 @@ class NutritionScreenViewController : UIViewController{
 struct CameraScanner : View {
     @State private var barcodeResult : String = ""
     @State private var isScanning : Bool = true
+    
+    @State private var breakfastMeals : [any Food] = []
+    @State private var lunchMeals : [any Food] = []
+    @State private var dinnerMeals : [any Food] = []
+    @State private var snackMeals : [any Food] = []
     private var navigationController : UINavigationController?
     
     private var macroColors: [Color] = [Color.pink,Color.cyan,Color.green]
     
     init(navigationController: UINavigationController? = nil) {
         self.navigationController = navigationController
+    }
+    
+    func getMeals(){
+        self.breakfastMeals = NutritionManager.nutritionManager.getMeals(mealType: .Breakfast)
     }
     
     var body: some View {
@@ -54,9 +63,17 @@ struct CameraScanner : View {
                     VStack{
                         List{
                             SwiftUI.Section(header: NutiritionSectionHeader(macroColors: self.macroColors)) {
-                                FoodItemListCell(navigationController: navigationController!)
-                                FoodItemListCell(navigationController: navigationController!)
-                                FoodItemListCell(navigationController: navigationController!)
+                                if self.breakfastMeals.isEmpty{
+                                    Text("No Meals Entered....").foregroundColor(Color(UIColor.secondaryLabel))
+                                }
+                                ForEach(self.breakfastMeals,id: \.id) { item in
+                                    if let item = item as? GroceryItem{
+                                        GroceryItemCell(scannedFood: item, navigationController: navigationController!)
+                                    }else if let item = item as? Recipe{
+                                        Text("Recipe")
+                                    }
+                                }
+                                
                                 HStack(alignment:.center){
                                     Button("+ Add"){
                                         
@@ -77,9 +94,16 @@ struct CameraScanner : View {
                     VStack{
                         List{
                             SwiftUI.Section(header: NutiritionSectionHeader(macroColors: self.macroColors)) {
-                                FoodItemListCell(navigationController: navigationController!)
-                                FoodItemListCell(navigationController: navigationController!)
-                                FoodItemListCell(navigationController: navigationController!)
+                                if self.lunchMeals.isEmpty{
+                                    Text("No Meals Entered....").foregroundColor(Color(UIColor.secondaryLabel))
+                                }
+                                ForEach(self.lunchMeals,id: \.id) { item in
+                                    if let item = item as? GroceryItem{
+                                        GroceryItemCell(scannedFood: item, navigationController: navigationController!)
+                                    }else if let item = item as? Recipe{
+                                        Text("Recipe")
+                                    }
+                                }
                                 HStack(alignment:.center){
                                     Button("+ Add"){
                                         
@@ -100,9 +124,46 @@ struct CameraScanner : View {
                     VStack{
                         List{
                             SwiftUI.Section(header: NutiritionSectionHeader(macroColors: self.macroColors)) {
-                                FoodItemListCell(navigationController: navigationController!)
-                                FoodItemListCell(navigationController: navigationController!)
-                                FoodItemListCell(navigationController: navigationController!)
+                                if self.dinnerMeals.isEmpty{
+                                    Text("No Meals Entered....").foregroundColor(Color(UIColor.secondaryLabel))
+                                }
+                                ForEach(self.dinnerMeals,id: \.id) { item in
+                                    if let item = item as? GroceryItem{
+                                        GroceryItemCell(scannedFood: item, navigationController: navigationController!)
+                                    }else if let item = item as? Recipe{
+                                        Text("Recipe")
+                                    }
+                                }
+                                HStack(alignment:.center){
+                                    Button("+ Add"){
+                                        
+                                    }.frame(maxWidth: .infinity,alignment:.leading).padding(EdgeInsets(top: 0, leading: 10, bottom: 0, trailing: 0)).tint(Color.pink)
+                                    Spacer()
+                                    Button(){
+                                        
+                                    }label: {
+                                        Label(
+                                            title: { },
+                                            icon: { Image(systemName: "ellipsis").foregroundColor(Color.pink)}
+                                        )
+                                    }.padding(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 10))
+                                }
+                            }
+                        }.frame(height: 275).cornerRadius(10)
+                    }.padding(EdgeInsets(top: 10, leading: 0, bottom: 0, trailing: 0))
+                    VStack{
+                        List{
+                            SwiftUI.Section(header: NutiritionSectionHeader(macroColors: self.macroColors)) {
+                                if self.snackMeals.isEmpty{
+                                    Text("No Meals Entered....").foregroundColor(Color(UIColor.secondaryLabel))
+                                }
+                                ForEach(self.snackMeals,id: \.id) { item in
+                                    if let item = item as? GroceryItem{
+                                        GroceryItemCell(scannedFood: item, navigationController: navigationController!)
+                                    }else if let item = item as? Recipe{
+                                        Text("Recipe")
+                                    }
+                                }
                                 HStack(alignment:.center){
                                     Button("+ Add"){
                                         
@@ -157,6 +218,11 @@ struct CameraScanner : View {
                     )
                 }.padding(EdgeInsets(top: 5, leading: 5, bottom: 5, trailing: 5))
             }.background(Color.pink.opacity(0.5)).frame(height: 50).clipShape(Capsule())
+        }.onAppear{
+            self.breakfastMeals = NutritionManager.nutritionManager.getMeals(mealType: .Breakfast)
+            self.lunchMeals = NutritionManager.nutritionManager.getMeals(mealType: .Lunch)
+            self.dinnerMeals = NutritionManager.nutritionManager.getMeals(mealType: .Dinner)
+            self.snackMeals = NutritionManager.nutritionManager.getMeals(mealType: .Snack)
         }
     }
 }
@@ -218,7 +284,6 @@ extension BarcodeScannerViewController : DataScannerViewControllerDelegate{
         switch item{
         case .barcode(let barcode):
             self.barcodeResult = barcode.payloadStringValue ?? ""
-            print("Barcode Text Scanned : \(self.barcodeResult)")
             _Concurrency.Task{
                 NutritionManager.nutritionManager.searchBarcodeID(with: String(String(self.barcodeResult).dropFirst())) { res in
                     switch res{
