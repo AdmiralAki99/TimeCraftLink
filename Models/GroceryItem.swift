@@ -37,7 +37,8 @@ struct Servings : Codable{
     let raw : String
 }
 
-struct GroceryItem : Codable{
+struct GroceryItem : Food,Identifiable{
+    var id: Int
     let title: String
     let badges : [String]
     let importantBadges : [String]
@@ -51,4 +52,7 @@ struct GroceryItem : Codable{
     let brand : String
 }
 
+protocol Food: Identifiable,Codable{
+    var id : Int {get set}
+}
 
