@@ -9,10 +9,11 @@ import Foundation
 
 struct GrocerySearch: Codable{
     let products : [GrocerySearchResult]
+    let number : Int
 }
 
 struct GrocerySearchResult : Codable, Identifiable{
-    var id: Int
-    let name : String
+    let id: Int
+    let title : String
     let image : String
 }

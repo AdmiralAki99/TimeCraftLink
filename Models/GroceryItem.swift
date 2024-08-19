@@ -55,4 +55,3 @@ struct GroceryItem : Food,Identifiable{
 protocol Food: Identifiable,Codable{
     var id : Int {get set}
 }
-
