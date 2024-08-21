@@ -11,7 +11,7 @@ import SwiftUI
 class NutritionSearchViewController : UIViewController{
 
     override func viewDidLoad() {
-        let vc = UIHostingController(rootView: NutritionSearchResultView())
+        let vc = UIHostingController(rootView: NutritionSearchResultView(navigationController: self.navigationController!))
         let searchView = vc.view!
         searchView.translatesAutoresizingMaskIntoConstraints = false
 
@@ -36,15 +36,21 @@ struct NutritionSearchResultView : View {
     @State private var searchGroceryResults : [GrocerySearchResult] = []
     @State private var searchIngredientResults : [IngredientSearchResult] = []
     
+    private var navigationController : UINavigationController
+    
+    init(navigationController : UINavigationController){
+        self.navigationController = navigationController
+    }
+    
     var body: some View {
         TabView{
             NavigationStack{
                 List{
                     if searchRecipeText == "" {
-                        Text("No Search")
+
                     }else{
                         ForEach(self.searchResults,id: \.id){ item in
-                            Text("\(item.title)")
+                            RecipeSearchResultCell(navigationController: navigationController, searchResult: item)
                         }
                     }
                 }
@@ -81,15 +87,15 @@ struct NutritionSearchResultView : View {
             NavigationStack{
                 List{
                     ForEach(self.searchGroceryResults,id: \.id){ item in
-                        Text("\(item.name)")
+                        SearchGroceryItemCell(navigationController: navigationController, searchResult: item)
                     }
                 }
             }.searchable(text: $searchGroceryText).onSubmit(of: .search, {
                 // This is done due to current API restrictions, still works with the onChange function
-                NutritionManager.nutritionManager.searchGroceryID(with: searchRecipeText, offset: 0) { res in
+                NutritionManager.nutritionManager.searchGroceryID(with: searchGroceryText, offset: 0) { res in
                     switch res{
                         case .success(let search):
-                            self.searchGroceryResults = search.products
+                        self.searchGroceryResults = search.products
                             break
                         case .failure(let error):
                             fatalError()
@@ -130,3 +136,94 @@ struct NutritionSearchResultView : View {
         }
     }
 }
+
+struct SearchGroceryItemCell : View {
+    private let navigationController : UINavigationController
+    private let searchResult : GrocerySearchResult
+    @State private var foodItem : GroceryItem?
+    
+    init(navigationController: UINavigationController, searchResult: GrocerySearchResult) {
+        self.navigationController = navigationController
+        self.searchResult = searchResult
+    }
+    
+    func getGroceryItem(){
+        print("ID: \(self.searchResult.id)")
+            DispatchQueue.main.async{
+                NutritionManager.nutritionManager.searchGroceryFromID(with: String(self.searchResult.id), completion: { res in
+                    switch res{
+                    case .success(let item):
+                        foodItem = item
+                        break
+                    case .failure(let error):
+                        print("ERROR: \(String(describing: error))")
+                    }
+                })
+        }
+    }
+    
+    var body: some View {
+        HStack{
+            VStack{
+                Text("\(searchResult.title)").truncationMode(.tail)
+            }
+            Button(){
+                DispatchQueue.main.async{
+                    getGroceryItem()
+                }
+                if let food = self.foodItem{
+                    navigationController.pushViewController(GrocerySearchItemViewController(foodItem: food), animated: true)
+                }
+            }label: {
+                Label(
+                    title: { Text("") },
+                    icon: { Image(systemName: "chevron.right").foregroundColor(Color(UIColor.label)) }
+                )
+            }.frame(maxWidth: .infinity,alignment: .trailing).controlSize(.small).frame(maxWidth: .infinity,alignment: .trailing)
+        }
+    }
+}
+
+struct RecipeSearchResultCell : View {
+    private let navigationController : UINavigationController
+    private let searchResult : RecipeSearchResult
+    @State private var recipeItem : Recipe?
+    
+    init(navigationController: UINavigationController, searchResult: RecipeSearchResult) {
+        self.navigationController = navigationController
+        self.searchResult = searchResult
+    }
+    
+    func getRecipe(){
+        print("ID: \(searchResult.id)")
+        DispatchQueue.main.async{
+            NutritionManager.nutritionManager.searchRecipeFromID(with:self.searchResult.id, completion: { res in
+                switch res{
+                case .success(let item):
+                    recipeItem = item
+                    print(item)
+                    break
+                case .failure(let error):
+                    print("ERROR: \(String(describing: error))")
+                }
+            })
+    }
+    }
+    
+    var body: some View {
+        HStack{
+            VStack{
+                Text("\(searchResult.title)").truncationMode(.tail)
+            }
+            Button(){
+                getRecipe()
+            }label: {
+                Label(
+                    title: { Text("") },
+                    icon: { Image(systemName: "chevron.right").foregroundColor(Color(UIColor.label)) }
+                )
+            }.frame(maxWidth: .infinity,alignment: .trailing).controlSize(.small).frame(maxWidth: .infinity,alignment: .trailing)
+        }
+    }
+}
+
