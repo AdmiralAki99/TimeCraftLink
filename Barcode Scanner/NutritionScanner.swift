@@ -186,11 +186,11 @@ struct CameraScanner : View {
             }
             HStack(alignment: .center){
                 Button(){
-                    navigationController?.pushViewController(FoodItemViewController(), animated: true)
+                    navigationController?.pushViewController(NutritionSearchViewController(), animated: true)
                 }label: {
                     Label(
                         title: { Text("") },
-                        icon: { Image(systemName: "plus").tint(Color.white) }
+                        icon: { Image(systemName: "magnifyingglass").tint(Color.white) }
                     )
                 }.padding(EdgeInsets(top: 5, leading: 10, bottom: 5, trailing: 5))
                 Button(){

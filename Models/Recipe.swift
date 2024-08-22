@@ -24,11 +24,13 @@ struct Recipe : Food,Identifiable{
     let summary : String?
     let sourceUrl : String?
     let sourceName : String?
+    let image : String?
 }
 
 struct RecipeIngredient : Codable{
     let id : Int?
     let image : String?
+    let name : String?
     let consistency : String?
     let original : String?
     let amount : Double?
@@ -47,14 +49,13 @@ struct Measure : Codable{
 }
 
 struct RecipeNutritionInfo : Codable{
-    let id : Int
     let calories : String?
     let carbs : String?
     let fat : String?
     let protein : String?
     let nutrient : [Nutrient]?
-    let bad : [NutritionType]
-    let good : [NutritionType]
+    let bad : [NutritionType]?
+    let good : [NutritionType]?
 }
 
 struct NutritionType: Codable{
@@ -65,12 +66,13 @@ struct NutritionType: Codable{
 }
 
 struct RecipeStep : Codable{
+    let number : Int?
     let name : String?
     let steps : [Step]?
 }
 
 struct Step : Codable{
-    let number : Int?
+    let number : Int
     let step : String?
     let ingredients : [StepIngredient]
 }

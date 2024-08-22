@@ -25,12 +25,8 @@ struct NutritionChartCard : View {
             Divider().frame(width: 1).overlay(Color.white)
             VStack{
                 VStack{
-                    Text("Consumed").font(.subheadline)
+                    Text("Consumed").font(.headline)
                     Text("\(Int(NutritionManager.nutritionManager.getDailyCaloricalIntake())) cal")
-                }
-                VStack{
-                    Text("Workouts").font(.subheadline)
-                    Text("0 cal")
                 }
             }
         }.onAppear(){
