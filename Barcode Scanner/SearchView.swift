@@ -195,18 +195,20 @@ struct RecipeSearchResultCell : View {
     }
     
     func getRecipe(){
-        print("ID: \(searchResult.id)")
-        DispatchQueue.main.async{
-            NutritionManager.nutritionManager.searchRecipeFromID(with:self.searchResult.id, completion: { res in
-                switch res{
-                case .success(let item):
-                    recipeItem = item
-                    break
-                case .failure(let error):
-                    print("ERROR: \(String(describing: error))")
-                }
-            })
-    }
+        if recipeItem == nil{
+            print("ID: \(searchResult.id)")
+            DispatchQueue.main.async{
+                NutritionManager.nutritionManager.searchRecipeFromID(with:self.searchResult.id, completion: { res in
+                    switch res{
+                    case .success(let item):
+                        recipeItem = item
+                        break
+                    case .failure(let error):
+                        print("ERROR: \(String(describing: error))")
+                    }
+                })
+            }
+        }
     }
     
     var body: some View {
@@ -219,7 +221,6 @@ struct RecipeSearchResultCell : View {
                 if let recipe = recipeItem{
                     navigationController.pushViewController(RecipeViewController(recipe: recipe), animated: true)
                 }
-                
             }label: {
                 Label(
                     title: { Text("") },

@@ -100,21 +100,19 @@ struct RecipeView : View {
                 }.padding(EdgeInsets(top: 0, leading: 10, bottom: 0, trailing: 10))
             }.frame(height: 70,alignment:.center).overlay(RoundedRectangle(cornerRadius: 3).stroke(.pink,lineWidth: 1)).padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10))
             VStack{
-                Text(String(recipeItem.summary ?? ""))
-            }
-            List{
-                Text("Text")
-                Text("Text")
-                Text("Text")
+//                Text(String(htmlText: recipeItem.summary ?? "")).multilineTextAlignment(.leading)
+                ExpandSummaryView(text: String(htmlText: recipeItem.summary ?? ""))
+            }.padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10))
+            VStack{
                 ForEach(recipeItem.extendedIngredients ?? [],id:\.id) { item in
                     RecipeIngredientCell(recipeIngredient: item)
                 }
-            }.padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10)).background(Color(UIColor.lightGray).opacity(0.4)).cornerRadius(10.0).foregroundColor(Color(UIColor.label))
-            List{
+            }.foregroundColor(Color(UIColor.label)).padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10))
+            VStack{
                 ForEach(recipeItem.analyzedInstructions?.first?.steps ?? [],id:\.number) { item in
                     RecipeInstructionCell(recipeStep : item)
                 }
-            }.padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10)).background(Color(UIColor.lightGray).opacity(0.4)).cornerRadius(10.0).foregroundColor(Color(UIColor.label))
+            }.foregroundColor(Color(UIColor.label)).padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10))
             HStack(alignment:.center){
                 Picker("Meal Selection",selection: $mealSelection){
                     ForEach(meals,id:\.self){
@@ -163,7 +161,7 @@ struct RecipeIngredientCell : View {
                 Text("\(String(recipeIngredient.measures?.metric?.amount ?? 0.0)) \(String(recipeIngredient.measures?.metric?.unitShort ?? ""))").frame(maxWidth: .infinity,alignment: .leading).font(.caption)
             }
             Circle().stroke(.pink,lineWidth: 1)
-                .frame(width: 200,height: 20)
+                .frame(width: 20,height: 20,alignment: .trailing)
                 .foregroundColor(.pink).overlay{
                 Image(systemName: isClicked ? "checkmark": "")
             }.onTapGesture {
@@ -177,18 +175,58 @@ struct RecipeIngredientCell : View {
 
 struct RecipeInstructionCell : View {
     private var recipeStep : Step
+    @State private var isClicked : Bool = false
     
     init(recipeStep: Step) {
         self.recipeStep = recipeStep
     }
     
     var body: some View {
+        HStack{
+            Circle().stroke(.pink,lineWidth: 1)
+                .frame(width: 20,height: 20,alignment: .leading)
+                .foregroundColor(.pink).overlay{
+                Image(systemName: isClicked ? "checkmark": "")
+            }.onTapGesture {
+                withAnimation(.smooth) {
+                    isClicked.toggle()
+                }
+            }
+            VStack{
+                Text(String(recipeStep.step ?? "").firstCapitalized).multilineTextAlignment(.leading).frame(maxWidth: .infinity,alignment: .leading)
+    //            ForEach(recipeStep.ingredients, id: \.id) { ingredient in
+    //                Text(String(ingredient.localizedName?.firstLetterInEachWordCapitalized ?? "")).font(.caption2)
+    //            }
+            }.frame(maxWidth: .infinity,alignment: .trailing)
+        }
+    }
+}
+
+struct ExpandSummaryView : View {
+    @State private var isEnlarged: Bool = false
+    private var descriptionText : String
+    
+    init(text : String){
+        self.descriptionText = text
+    }
+    
+    var body: some View {
         VStack{
-            Text(String(recipeStep.step ?? "").bulletedString).multilineTextAlignment(.leading)
-//            ForEach(recipeStep.ingredients, id: \.id) { ingredient in
-//                Text(String(ingredient.localizedName?.firstLetterInEachWordCapitalized ?? "")).font(.caption2)
-//            }
-        }.cornerRadius(10.0)
+            HStack{
+                Button {
+                    withAnimation {
+                        isEnlarged.toggle()
+                    }
+                } label: {
+                    Label("Expand Button",systemImage: "ellipsis").labelStyle(.iconOnly).foregroundColor(.white)
+                }.frame(maxWidth: .infinity,alignment: .trailing)
+            }.frame(maxWidth: .infinity)
+            
+            VStack{
+                Text(String(self.descriptionText)).multilineTextAlignment(.leading)
+            }.frame(height: isEnlarged ? nil : 30,alignment: .top).clipped()
+            
+        }.frame(maxWidth: .infinity).background(.thickMaterial).padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10))
     }
 }
 
@@ -211,6 +249,17 @@ extension String{
         let bullet = "\u{2022} "
         
         return bullet + self
+    }
+    
+    init(htmlText: String){
+        let data = Data(htmlText.utf8)
+        do{
+            if let decodedText = try? NSAttributedString(data: data, options: [.documentType : NSAttributedString.DocumentType.html],documentAttributes: nil){
+                self.init(decodedText.string)
+            }else{
+                self.init()
+            }
+        }
     }
 }
 
