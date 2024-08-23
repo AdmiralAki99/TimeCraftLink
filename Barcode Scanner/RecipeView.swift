@@ -32,7 +32,6 @@ class RecipeViewController : UIViewController{
         recipeView.translatesAutoresizingMaskIntoConstraints = false
         addChild(vc)
         view.addSubview(recipeView)
-        
         NSLayoutConstraint.activate([recipeView.centerXAnchor.constraint(equalTo: view.centerXAnchor),recipeView.centerYAnchor.constraint(equalTo: view.centerYAnchor), recipeView.widthAnchor.constraint(equalToConstant: view.bounds.width),recipeView.heightAnchor.constraint(equalToConstant: view.bounds.height)])
     }
     
@@ -80,21 +79,38 @@ struct RecipeView : View {
                 Text("By: \(String(recipeItem.sourceName ?? ""))")
             }
             HStack{
-                Label("\(String(recipeItem.cookingMinutes ?? 0)) mins",systemImage: "clock")
-                Spacer()
-                Label("\(String(recipeItem.preparationMinutes ?? 0)) mins",systemImage: "clock")
-                Spacer()
-                Label("\(String(recipeNutritionalInfo?.calories ?? "0")) cal",systemImage: "clock")
-            }.frame(maxWidth: .infinity,alignment: .leading)
+                VStack(alignment: .center){
+                    Label("Prep Mins",systemImage: "clock").padding(EdgeInsets(top: 0, leading: 5, bottom: 0, trailing: 5)).labelStyle(.iconOnly)
+                    Text("\(String(recipeItem.preparationMinutes ?? 0)) mins").foregroundColor(Color(UIColor.label))
+                }.padding(EdgeInsets(top: 0, leading: 10, bottom: 0, trailing: 10))
+                Divider().frame(width: 2,height:50).overlay(Color.pink)
+                VStack(alignment: .center){
+                    Label("Cooking Mins",systemImage: "oven").labelStyle(.iconOnly)
+                    Text("\(String(recipeItem.cookingMinutes ?? 0)) mins").foregroundColor(Color(UIColor.label))
+                }.padding(EdgeInsets(top: 0, leading: 10, bottom: 0, trailing: 10))
+                Divider().frame(width: 2,height:50).overlay(Color.pink)
+                VStack(alignment: .center){
+                    Label("Calories",systemImage: "flame.fill").labelStyle(.iconOnly)
+                    Text("\(String(recipeNutritionalInfo?.calories ?? "")) cal").foregroundColor(Color(UIColor.label)).labelStyle(.iconOnly)
+                }.padding(EdgeInsets(top: 0, leading: 10, bottom: 0, trailing: 10))
+                Divider().frame(width: 2,height:50).overlay(Color.pink)
+                VStack(alignment: .center){
+                    Label("Protein",systemImage: "p.circle.fill").labelStyle(.iconOnly)
+                    Text("\(String(recipeNutritionalInfo?.protein ?? ""))").foregroundColor(Color(UIColor.label)).labelStyle(.iconOnly)
+                }.padding(EdgeInsets(top: 0, leading: 10, bottom: 0, trailing: 10))
+            }.frame(height: 70,alignment:.center).overlay(RoundedRectangle(cornerRadius: 3).stroke(.pink,lineWidth: 1)).padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10))
             VStack{
                 Text(String(recipeItem.summary ?? ""))
             }
-            DisclosureGroup("Ingredients"){
+            List{
+                Text("Text")
+                Text("Text")
+                Text("Text")
                 ForEach(recipeItem.extendedIngredients ?? [],id:\.id) { item in
                     RecipeIngredientCell(recipeIngredient: item)
                 }
             }.padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10)).background(Color(UIColor.lightGray).opacity(0.4)).cornerRadius(10.0).foregroundColor(Color(UIColor.label))
-            DisclosureGroup("Steps"){
+            List{
                 ForEach(recipeItem.analyzedInstructions?.first?.steps ?? [],id:\.number) { item in
                     RecipeInstructionCell(recipeStep : item)
                 }
@@ -135,14 +151,26 @@ struct RecipeView : View {
 
 struct RecipeIngredientCell : View {
     private var recipeIngredient : RecipeIngredient
+    @State private var isClicked : Bool = false
     
     init(recipeIngredient: RecipeIngredient) {
         self.recipeIngredient = recipeIngredient
     }
     var body: some View {
         HStack{
-            Text(String(recipeIngredient.name ?? "").firstCapitalized).frame(maxWidth: .infinity,alignment: .leading)
-            Text("\(String(recipeIngredient.measures?.metric?.amount ?? 0.0)) \(String(recipeIngredient.measures?.metric?.unitShort ?? ""))").frame(maxWidth: .infinity,alignment: .trailing)
+            VStack{
+                Text(String(recipeIngredient.name ?? "").firstCapitalized).frame(maxWidth: .infinity,alignment: .leading)
+                Text("\(String(recipeIngredient.measures?.metric?.amount ?? 0.0)) \(String(recipeIngredient.measures?.metric?.unitShort ?? ""))").frame(maxWidth: .infinity,alignment: .leading).font(.caption)
+            }
+            Circle().stroke(.pink,lineWidth: 1)
+                .frame(width: 200,height: 20)
+                .foregroundColor(.pink).overlay{
+                Image(systemName: isClicked ? "checkmark": "")
+            }.onTapGesture {
+                withAnimation(.smooth) {
+                    isClicked.toggle()
+                }
+            }
         }
     }
 }

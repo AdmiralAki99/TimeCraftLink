@@ -201,7 +201,6 @@ struct RecipeSearchResultCell : View {
                 switch res{
                 case .success(let item):
                     recipeItem = item
-                    print(item)
                     break
                 case .failure(let error):
                     print("ERROR: \(String(describing: error))")
@@ -217,6 +216,10 @@ struct RecipeSearchResultCell : View {
             }
             Button(){
                 getRecipe()
+                if let recipe = recipeItem{
+                    navigationController.pushViewController(RecipeViewController(recipe: recipe), animated: true)
+                }
+                
             }label: {
                 Label(
                     title: { Text("") },
