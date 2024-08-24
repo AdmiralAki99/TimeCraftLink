@@ -6,148 +6,123 @@
 //
 
 import UIKit
+import SwiftUI
 
 class BluetoothDiscoveryViewController: UIViewController {
-    
-    var rippleLayer = [CAShapeLayer]()
-    
-    var rippleLayerAnimated = false
-    
-    var deviceButton : [UIButton] = []
-    
-    let deviceButtonCoordinates : [(CGFloat,CGFloat)] = [(5,(UIScreen.main.bounds.height - 10)/2.0),(UIScreen.main.bounds.width/2 - 15,UIScreen.main.bounds.height/2 - 180),(UIScreen.main.bounds.width - 50,UIScreen.main.bounds.height/2),(UIScreen.main.bounds.width/2,UIScreen.main.bounds.height/2 + 135)]
-    
-    
-    
-    
-    let bluetoothButton : UIButton = {
-        
-        let button = UIButton()
-        button.backgroundColor = .red
-        button.setImage(UIImage(systemName: "antenna.radiowaves.left.and.right",withConfiguration: UIImage.SymbolConfiguration(pointSize: 34,weight: .regular )), for: .normal)
-        button.tintColor = .white
-        return button
-    }()
 
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let back_button = UIBarButtonItem(title: "Back",image: UIImage(systemName: "arrow.backward"), target: self, action: #selector(returnToPreviousScreen))
+        view.overrideUserInterfaceStyle = .dark
         
-        back_button.tintColor = .white
+        let bluetoothView = BluetoothDiscoveryView()
         
-        navigationItem.leftBarButtonItem = back_button
+        let hostingController = UIHostingController(rootView: bluetoothView)
         
-        createDeviceButtons()
+        addChild(hostingController)
+        view.addSubview(hostingController.view)
         
-        bluetoothButton.addTarget(self, action: #selector(createRipple), for: .touchUpInside)
-        title = "Discovery Screen"
+        hostingController.view.frame = view.bounds
+        hostingController.view.autoresizingMask = [.flexibleWidth,.flexibleHeight]
         
-        view.backgroundColor = .black
-        
-//        createRipple()
-        // Do any additional setup after loading the view.
+        hostingController.didMove(toParent: self)
     }
     
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        view.addSubview(bluetoothButton)
-        displayDeviceButtons()
-        bluetoothButton.frame = CGRect(x: view.width/2 - 40, y: view.height/2 - 40, width: 80, height: 80)
-        bluetoothButton.layer.cornerRadius = 40
-//        bluetoothButton.layer.masksToBounds = true
-        
-     
-
     }
-    
 
-    /*
-    // MARK: - Navigation
+}
 
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destination.
-        // Pass the selected object to the new view controller.
-    }
-    */
+struct BluetoothDiscoveryView : View {
     
-    @objc func returnToPreviousScreen(){
-        navigationController?.popViewController(animated: true)
-    }
+    @State private var firstCircleTrigger : Bool = false
+    @State private var secondCircleTrigger : Bool = false
+    @State private var bluetoothTriggered : Bool = false
     
-    @objc func createRipple(){
-        BluetoothManager.bluetooth_manager.beginBluetooth()
-        if rippleLayerAnimated == false{
-            for index in 0...2{
-                let bezierPath = UIBezierPath(arcCenter: .zero, radius: (UIScreen.main.bounds.width - 20)/2.0, startAngle: 0, endAngle: 2 * .pi, clockwise: true)
-                let rippleLayer = CAShapeLayer()
-                rippleLayer.path = bezierPath.cgPath
-                rippleLayer.lineWidth = 2.0
-                rippleLayer.fillColor = UIColor.clear.cgColor
-                rippleLayer.strokeColor = UIColor.white.cgColor
-                rippleLayer.lineCap = CAShapeLayerLineCap.round
-                rippleLayer.position = CGPoint(x: bluetoothButton.frame.size.width-40, y: bluetoothButton.frame.size.height-40)
-                bluetoothButton.layer.addSublayer(rippleLayer)
-                self.rippleLayer.append(rippleLayer)
-                
+    private var numberOfDevicesInOneRing : Int = 10
+    
+    private var numberOfButtons : Int = 20
+    private let baseRadius : Int = 100
+    private let radiusIncrement: CGFloat = CGFloat(100 / 1.75)
+    
+    @State private var buttonAngles : [(Double,Double)] = []
+    
+    func createButtons(radius : CGFloat,numberOfButtonsInLevel : Int){
+        let angleDiff = Double.pi * 2.0 / Double(numberOfButtonsInLevel)
+        let centerX = (UIScreen.main.bounds.width / 2)
+        let centerY = (UIScreen.main.bounds.height / 2) - 55 // Adjust this for the desired spacing around the center
+
+        for placementIndex in 0..<numberOfButtonsInLevel{
+            let angle = Double(placementIndex) * angleDiff
+            let xOffset = radius * cos(angle)
+            let yOffset = radius * sin(angle)
+            self.buttonAngles.append((Double(centerX) + xOffset, Double(centerY) + yOffset))
+        }
+    }
+
+    func createRings(numberOfButtons : Int){
+        let levels = ceil(Double(numberOfButtons) / Double(numberOfDevicesInOneRing))
+        var remainingButtons = numberOfButtons
+
+        for level in 1...Int(levels) {
+            let radius: CGFloat
+                if level == 1 {
+                    radius = CGFloat(baseRadius)
+                } else {
+                    radius = CGFloat(baseRadius) + CGFloat(level - 1) * radiusIncrement
+                }
+            let buttonsInLevel: Int
+            
+            if remainingButtons >= numberOfDevicesInOneRing {
+                buttonsInLevel = numberOfDevicesInOneRing
+            } else {
+                buttonsInLevel = remainingButtons
             }
             
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-                self.animateRipple(with: 0)
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.6){
-                    self.animateRipple(with: 1)
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.8){
-                        self.animateRipple(with: 2)
-                    }
-                }
-            }
-            rippleLayerAnimated = true
+            remainingButtons -= buttonsInLevel
+            
+//             Create the buttons with the calculated number and radius
+             createButtons(radius: radius, numberOfButtonsInLevel: buttonsInLevel)
         }
-     
-    }
-    
-    func createDeviceButtons(){
-        for coordinates in deviceButtonCoordinates{
-            let button = UIButton()
-            button.backgroundColor = .black
-            button.layer.borderColor = UIColor.white.cgColor
-            button.setImage(UIImage(systemName: "iphone.gen2"), for: .normal)
-            button.tintColor = .white
-            button.layer.borderWidth = 2
-            button.layer.cornerRadius = 20
-            deviceButton.append(button)
-        }
-    }
-    
-    func displayDeviceButtons(){
-        for index in 0..<deviceButtonCoordinates.count{
-            view.addSubview(deviceButton[index])
-            let xCoord = deviceButtonCoordinates[index].0
-            let yCoord = deviceButtonCoordinates[index].1
-            deviceButton[index].frame = CGRect(x: xCoord, y: yCoord, width: 40, height: 40)
-        }
-    }
-    
-    func animateRipple(with index: Int){
-        
-        let scaleAnimation = CABasicAnimation(keyPath: "transform.scale")
-        scaleAnimation.duration = 3.0
-        scaleAnimation.fromValue = 0.0
-        scaleAnimation.toValue = 0.9
-        scaleAnimation.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeOut)
-        scaleAnimation.repeatCount =  .greatestFiniteMagnitude
-//        scaleAnimation.autoreverses = true
-        rippleLayer[index].add(scaleAnimation, forKey: "scale")
-        
-        let opacity = CABasicAnimation(keyPath: #keyPath(CALayer.opacity))
-        opacity.duration = 2.0
-        opacity.fromValue = 0.9
-        opacity.toValue = 0.0
-        opacity.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeOut)
-        opacity.repeatCount =  .greatestFiniteMagnitude
-        
-        rippleLayer[index].add(scaleAnimation, forKey: "opacity")
-    }
 
+    }
+    
+    
+    var body: some View {
+        Button {
+            bluetoothTriggered = true
+        } label: {
+            ZStack{
+                if bluetoothTriggered{
+                    Circle().stroke(lineWidth: 40).frame(width:100,height:100).foregroundColor(.pink).foregroundColor(.pink).scaleEffect(firstCircleTrigger ? 2: 1).opacity(firstCircleTrigger ? 0.7 : 0.0).animation(Animation.easeInOut(duration: 1).repeatForever(autoreverses: true).speed(0.5)).onAppear(){
+                        self.firstCircleTrigger.toggle()
+                    }
+                    Circle().stroke(lineWidth: 40).frame(width:80,height:80).foregroundColor(.pink).foregroundColor(.pink).scaleEffect(secondCircleTrigger ? 2: 1).opacity(secondCircleTrigger ? 0.6 : 0.0).animation(Animation.easeInOut(duration: 1).repeatForever(autoreverses: true).speed(0.7)).onAppear(){
+                        self.secondCircleTrigger.toggle()
+                    }
+                    ForEach(0...self.numberOfButtons-1,id:\.self){ num in
+                        BluetoothDeviceButton().position(x:self.buttonAngles[num].0,y:self.buttonAngles[num].1).animation(Animation.easeIn(duration: 1).delay(1 * Double((num+1))))
+                    }
+                    
+                    
+                }
+                Circle().frame(width:100,height:100).foregroundColor(.pink).shadow(radius: 25)
+                Image(systemName: "iphone.gen3.radiowaves.left.and.right").font(.system(size: 25)).foregroundColor(.white).shadow(radius: 25)
+            }.onAppear{
+                createRings(numberOfButtons: self.numberOfButtons)
+            }
+        }
+    }
+}
+
+struct BluetoothDeviceButton : View {
+    var body: some View {
+        Button {
+            
+        } label: {
+            Image(systemName: "iphone.circle").font(.system(size: 25)).foregroundColor(.black).shadow(radius: 25)
+        }.frame(width:40,height:40).background(.white).shadow(radius: 25).clipShape(Circle())
+
+    }
 }
