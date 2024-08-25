@@ -65,6 +65,16 @@ struct RecipeView : View {
         }
     }
     
+    func getNutrientValueByKey(nutrientKey : String)->Double{
+        let nutrient = self.recipeNutritionalInfo?.nutrients?.filter({$0.name == nutrientKey}).first
+        return nutrient?.amount ?? 0.0
+    }
+    
+    func getNutrientByKey(nutrientKey: String) -> Nutrient?{
+        guard let nutrient = self.recipeNutritionalInfo?.nutrients?.filter({$0.name == nutrientKey}).first else { return nil }
+        return nutrient
+    }
+    
     var body: some View {
         
         ScrollView{
@@ -96,13 +106,70 @@ struct RecipeView : View {
                 Divider().frame(width: 2,height:50).overlay(Color.pink)
                 VStack(alignment: .center){
                     Label("Protein",systemImage: "p.circle.fill").labelStyle(.iconOnly)
-                    Text("\(String(recipeNutritionalInfo?.protein ?? ""))").foregroundColor(Color(UIColor.label)).labelStyle(.iconOnly)
+                    Text(self.recipeNutritionalInfo?.protein ?? "")
                 }.padding(EdgeInsets(top: 0, leading: 10, bottom: 0, trailing: 10))
             }.frame(height: 70,alignment:.center).overlay(RoundedRectangle(cornerRadius: 3).stroke(.pink,lineWidth: 1)).padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10))
             VStack{
 //                Text(String(htmlText: recipeItem.summary ?? "")).multilineTextAlignment(.leading)
                 ExpandSummaryView(text: String(htmlText: recipeItem.summary ?? ""))
             }.padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10))
+            HStack{
+                VStack{
+                    Text("Protein").font(.caption)
+                    Gauge(value: recipeNutritionalInfo?.caloricBreakdown.percentProtein ?? 0.0, in: 1...100) {
+                        
+                    }.gaugeStyle(.accessoryCircularCapacity).tint(Color.pink)
+                }
+                Spacer()
+                VStack{
+                    Text("Carbs").font(.caption)
+                    Gauge(value: recipeNutritionalInfo?.caloricBreakdown.percentCarbs ?? 0.0, in: 1...100) {
+                    }.gaugeStyle(.accessoryCircularCapacity).tint(Color.cyan)
+                }
+                Spacer()
+                VStack{
+                    Text("Fat").font(.caption)
+                    Gauge(value: recipeNutritionalInfo?.caloricBreakdown.percentFat ?? 0.0, in: 1...100) {
+                    
+                    }.gaugeStyle(.accessoryCircularCapacity).tint(Color.green)
+                }
+            }.frame(maxWidth: .infinity).padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10))
+            VStack{
+                Text("Percent of Daily Goals").frame(maxWidth: .infinity,alignment: .leading).bold()
+                HStack{
+                    VStack{
+                        Gauge(value: Double(getNutrientValueByKey(nutrientKey: "Protein")/NutritionManager.nutritionManager.getDailyProteinTarget())*100, in: 1...100) {
+                            
+                        }.gaugeStyle(.accessoryLinearCapacity).tint(Color.pink).padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10))
+                        Text("\(Int(getNutrientValueByKey(nutrientKey: "Protein")/NutritionManager.nutritionManager.getDailyProteinTarget()*100))%").font(.caption)
+                        Text("Protein").font(.caption)
+                        
+                    }
+                    Spacer()
+                    VStack{
+                        Gauge(value: Double(getNutrientValueByKey(nutrientKey: "Carbohydrates")/NutritionManager.nutritionManager.getDailyCarbTarget())*100, in: 1...100) {
+                        }.gaugeStyle(.accessoryLinearCapacity).tint(Color.cyan).padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10))
+                        Text("\(Int(getNutrientValueByKey(nutrientKey: "Carbohydrates")/NutritionManager.nutritionManager.getDailyCarbTarget()*100))%").font(.caption)
+                        Text("Carbs").font(.caption)
+                    }
+                    Spacer()
+                    VStack{
+                        Gauge(value: Double(getNutrientValueByKey(nutrientKey: "Fat")/NutritionManager.nutritionManager.getDailyFatTarget())*100, in: 1...100) {
+                        
+                        }.gaugeStyle(.accessoryLinearCapacity).tint(Color.green).padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10))
+                        Text("\(Int(getNutrientValueByKey(nutrientKey: "Fat")/NutritionManager.nutritionManager.getDailyFatTarget()*100))%").font(.caption)
+                        Text("Fat").font(.caption)
+                    }
+                    Spacer()
+                    VStack{
+                        Gauge(value: Double(getNutrientValueByKey(nutrientKey: "Calories")/NutritionManager.nutritionManager.getCaloricalDailyTarget())*100, in: 1...100) {
+                        
+                        }.gaugeStyle(.accessoryLinearCapacity).tint(Color.purple).padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10))
+                        Text("\(Int(getNutrientValueByKey(nutrientKey: "Calories")/NutritionManager.nutritionManager.getCaloricalDailyTarget()*100))%").font(.caption)
+                        Text("Calories").font(.caption)
+                    }
+                }.padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10))
+            }.padding(EdgeInsets(top: 10, leading: 0, bottom: 10, trailing: 0))
             VStack{
                 ForEach(recipeItem.extendedIngredients ?? [],id:\.id) { item in
                     RecipeIngredientCell(recipeIngredient: item)
@@ -124,15 +191,19 @@ struct RecipeView : View {
                     switch mealSelection{
                     case "Breakfast":
                         NutritionManager.nutritionManager.addMealToList(mealType: .Breakfast, meal: recipeItem)
+                        NutritionManager.nutritionManager.addRecipeNutritionalInfo(mealType: .Breakfast, nutritionInfo: recipeNutritionalInfo!)
                         break
                     case "Lunch":
                         NutritionManager.nutritionManager.addMealToList(mealType: .Lunch, meal: recipeItem)
+                        NutritionManager.nutritionManager.addRecipeNutritionalInfo(mealType: .Lunch, nutritionInfo: recipeNutritionalInfo!)
                         break
                     case "Dinner":
                         NutritionManager.nutritionManager.addMealToList(mealType: .Dinner, meal: recipeItem)
+                        NutritionManager.nutritionManager.addRecipeNutritionalInfo(mealType: .Dinner, nutritionInfo: recipeNutritionalInfo!)
                         break
                     case "Snack":
                         NutritionManager.nutritionManager.addMealToList(mealType: .Snack, meal: recipeItem)
+                        NutritionManager.nutritionManager.addRecipeNutritionalInfo(mealType: .Snack, nutritionInfo: recipeNutritionalInfo!)
                         break
                     default:
                         fatalError("Wrong Meal Selection")
@@ -218,7 +289,7 @@ struct ExpandSummaryView : View {
                         isEnlarged.toggle()
                     }
                 } label: {
-                    Label("Expand Button",systemImage: "ellipsis").labelStyle(.iconOnly).foregroundColor(.white)
+                    Label("Expand Button",systemImage: "ellipsis").labelStyle(.iconOnly).font(.system(size: 25)).foregroundColor(.white).padding(EdgeInsets(top: 10, leading: 0, bottom: 10, trailing: 10))
                 }.frame(maxWidth: .infinity,alignment: .trailing)
             }.frame(maxWidth: .infinity)
             
@@ -226,7 +297,7 @@ struct ExpandSummaryView : View {
                 Text(String(self.descriptionText)).multilineTextAlignment(.leading)
             }.frame(height: isEnlarged ? nil : 30,alignment: .top).clipped()
             
-        }.frame(maxWidth: .infinity).background(.thickMaterial).padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10))
+        }.frame(maxWidth: .infinity).padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10))
     }
 }
 
