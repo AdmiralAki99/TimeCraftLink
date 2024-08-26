@@ -15,9 +15,14 @@ class RecipeViewController : UIViewController{
         return Recipe(id: 0, vegetarian: nil, vegan: nil, glutenFree: nil, dairyFree: nil, preparationMinutes: nil, cookingMinutes: nil, extendedIngredients: nil, nutrition: nil, analyzedInstructions: nil,title: nil, readyInMinutes: nil,servings:nil,summary: nil,sourceUrl: nil, sourceName: nil, image: nil)
     }()
     
-    init(recipe: Recipe){
+    private var nutritionalInfo : RecipeNutritionInfo = {
+        return RecipeNutritionInfo(calories: "", carbs: "", fat: "", protein: "", nutrients: [], bad: [], good: [], caloricBreakdown: CaloricalBreakdown(percentProtein: 0.0, percentFat: 0.0, percentCarbs: 0.0))
+    }()
+    
+    init(recipe: Recipe,nutritionalInfo : RecipeNutritionInfo){
         super.init(nibName: nil, bundle: nil)
         self.recipe = recipe
+        self.nutritionalInfo = nutritionalInfo
     }
     
     required init?(coder: NSCoder) {
@@ -26,8 +31,8 @@ class RecipeViewController : UIViewController{
     
     override func viewDidLoad() {
         view.overrideUserInterfaceStyle = .dark
-        
-        let vc = UIHostingController(rootView: RecipeView(recipeItem: recipe))
+        print(self.nutritionalInfo)
+        let vc = UIHostingController(rootView: RecipeView(recipeItem: recipe, recipeNutritionalInfo: nutritionalInfo))
         let recipeView = vc.view!
         recipeView.translatesAutoresizingMaskIntoConstraints = false
         addChild(vc)
@@ -38,18 +43,33 @@ class RecipeViewController : UIViewController{
     override func viewDidLayoutSubviews() {
         
     }
+    
+    func getNutritionalInfo(){
+        DispatchQueue.main.async{
+            NutritionManager.nutritionManager.getRecipeNutritionalInfo(with: String(self.recipe.id)) { res in
+                switch res{
+                case .success(let item):
+                    self.nutritionalInfo = item
+                case .failure(let error):
+                    print("RECIPE VIEW :\(error)")
+                }
+            }
+        }
+    }
 }
 
 struct RecipeView : View {
     
     private var recipeItem : Recipe
-    @State private var recipeNutritionalInfo : RecipeNutritionInfo?
+    @State private var recipeNutritionalInfo : RecipeNutritionInfo
     @State private var recipeReveal : Bool = true
     @State private var mealSelection = "Breakfast"
     private let meals =  ["Breakfast","Lunch","Dinner","Snack"]
     
-    init(recipeItem: Recipe) {
+    init(recipeItem: Recipe, recipeNutritionalInfo: RecipeNutritionInfo) {
         self.recipeItem = recipeItem
+        self.recipeNutritionalInfo = recipeNutritionalInfo
+        
     }
     
     func getNutritionalInfo(){
@@ -66,12 +86,12 @@ struct RecipeView : View {
     }
     
     func getNutrientValueByKey(nutrientKey : String)->Double{
-        let nutrient = self.recipeNutritionalInfo?.nutrients?.filter({$0.name == nutrientKey}).first
+        let nutrient = self.recipeNutritionalInfo.nutrients?.filter({$0.name == nutrientKey}).first
         return nutrient?.amount ?? 0.0
     }
     
     func getNutrientByKey(nutrientKey: String) -> Nutrient?{
-        guard let nutrient = self.recipeNutritionalInfo?.nutrients?.filter({$0.name == nutrientKey}).first else { return nil }
+        guard let nutrient = self.recipeNutritionalInfo.nutrients?.filter({$0.name == nutrientKey}).first else { return nil }
         return nutrient
     }
     
@@ -101,12 +121,12 @@ struct RecipeView : View {
                 Divider().frame(width: 2,height:50).overlay(Color.pink)
                 VStack(alignment: .center){
                     Label("Calories",systemImage: "flame.fill").labelStyle(.iconOnly)
-                    Text("\(String(recipeNutritionalInfo?.calories ?? "")) cal").foregroundColor(Color(UIColor.label)).labelStyle(.iconOnly)
+                    Text("\(String(recipeNutritionalInfo.calories ?? "")) cal").foregroundColor(Color(UIColor.label)).labelStyle(.iconOnly)
                 }.padding(EdgeInsets(top: 0, leading: 10, bottom: 0, trailing: 10))
                 Divider().frame(width: 2,height:50).overlay(Color.pink)
                 VStack(alignment: .center){
                     Label("Protein",systemImage: "p.circle.fill").labelStyle(.iconOnly)
-                    Text(self.recipeNutritionalInfo?.protein ?? "")
+                    Text(self.recipeNutritionalInfo.protein ?? "")
                 }.padding(EdgeInsets(top: 0, leading: 10, bottom: 0, trailing: 10))
             }.frame(height: 70,alignment:.center).overlay(RoundedRectangle(cornerRadius: 3).stroke(.pink,lineWidth: 1)).padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10))
             VStack{
@@ -116,20 +136,20 @@ struct RecipeView : View {
             HStack{
                 VStack{
                     Text("Protein").font(.caption)
-                    Gauge(value: recipeNutritionalInfo?.caloricBreakdown.percentProtein ?? 0.0, in: 1...100) {
+                    Gauge(value: recipeNutritionalInfo.caloricBreakdown.percentProtein ?? 0.0, in: 1...100) {
                         
                     }.gaugeStyle(.accessoryCircularCapacity).tint(Color.pink)
                 }
                 Spacer()
                 VStack{
                     Text("Carbs").font(.caption)
-                    Gauge(value: recipeNutritionalInfo?.caloricBreakdown.percentCarbs ?? 0.0, in: 1...100) {
+                    Gauge(value: recipeNutritionalInfo.caloricBreakdown.percentCarbs ?? 0.0, in: 1...100) {
                     }.gaugeStyle(.accessoryCircularCapacity).tint(Color.cyan)
                 }
                 Spacer()
                 VStack{
                     Text("Fat").font(.caption)
-                    Gauge(value: recipeNutritionalInfo?.caloricBreakdown.percentFat ?? 0.0, in: 1...100) {
+                    Gauge(value: recipeNutritionalInfo.caloricBreakdown.percentFat ?? 0.0, in: 1...100) {
                     
                     }.gaugeStyle(.accessoryCircularCapacity).tint(Color.green)
                 }
@@ -191,19 +211,19 @@ struct RecipeView : View {
                     switch mealSelection{
                     case "Breakfast":
                         NutritionManager.nutritionManager.addMealToList(mealType: .Breakfast, meal: recipeItem)
-                        NutritionManager.nutritionManager.addRecipeNutritionalInfo(mealType: .Breakfast, nutritionInfo: recipeNutritionalInfo!)
+                        NutritionManager.nutritionManager.addRecipeNutritionalInfo(mealType: .Breakfast, nutritionInfo: recipeNutritionalInfo)
                         break
                     case "Lunch":
                         NutritionManager.nutritionManager.addMealToList(mealType: .Lunch, meal: recipeItem)
-                        NutritionManager.nutritionManager.addRecipeNutritionalInfo(mealType: .Lunch, nutritionInfo: recipeNutritionalInfo!)
+                        NutritionManager.nutritionManager.addRecipeNutritionalInfo(mealType: .Lunch, nutritionInfo: recipeNutritionalInfo)
                         break
                     case "Dinner":
                         NutritionManager.nutritionManager.addMealToList(mealType: .Dinner, meal: recipeItem)
-                        NutritionManager.nutritionManager.addRecipeNutritionalInfo(mealType: .Dinner, nutritionInfo: recipeNutritionalInfo!)
+                        NutritionManager.nutritionManager.addRecipeNutritionalInfo(mealType: .Dinner, nutritionInfo: recipeNutritionalInfo)
                         break
                     case "Snack":
                         NutritionManager.nutritionManager.addMealToList(mealType: .Snack, meal: recipeItem)
-                        NutritionManager.nutritionManager.addRecipeNutritionalInfo(mealType: .Snack, nutritionInfo: recipeNutritionalInfo!)
+                        NutritionManager.nutritionManager.addRecipeNutritionalInfo(mealType: .Snack, nutritionInfo: recipeNutritionalInfo)
                         break
                     default:
                         fatalError("Wrong Meal Selection")
@@ -213,7 +233,6 @@ struct RecipeView : View {
                 }.padding(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 10)).tint(Color.pink)
             }.padding(EdgeInsets(top: 10, leading: 0, bottom: 10, trailing: 10))
         }.onAppear(){
-            getNutritionalInfo()
         }
     }
 }

@@ -108,31 +108,6 @@ struct NutritionSearchResultView : View {
                 Image(systemName: "cart.fill").renderingMode(.template).foregroundColor(Color.pink)
             }.tag(1)
             
-            NavigationStack{
-                List{
-                    ForEach(self.searchIngredientResults,id: \.id){ item in
-                        Text("\(item.name)")
-                    }
-                }
-            }.searchable(text: $searchIngredientText).onSubmit(of: .search, {
-                // This is done due to current API restrictions, still works with the onChange function
-                NutritionManager.nutritionManager.searchPureIngredientID(with: searchRecipeText, offset: 0) { res in
-                    switch res{
-                        case .success(let search):
-                        self.searchIngredientResults = search.results
-                            break
-                        case .failure(let error):
-                            fatalError()
-                            break
-                    }
-                }
-            })
-            .tabItem {
-                Text("Ingredient Search")
-                Image(systemName: "carrot.fill").renderingMode(.template).foregroundColor(Color.pink)
-            }.tag(2)
-
-            
         }
     }
 }
@@ -188,6 +163,7 @@ struct RecipeSearchResultCell : View {
     private let navigationController : UINavigationController
     private let searchResult : RecipeSearchResult
     @State private var recipeItem : Recipe?
+    @State private var nutritionalInfo : RecipeNutritionInfo?
     
     init(navigationController: UINavigationController, searchResult: RecipeSearchResult) {
         self.navigationController = navigationController
@@ -211,6 +187,23 @@ struct RecipeSearchResultCell : View {
         }
     }
     
+    func getNutritionalInfo(){
+        if nutritionalInfo == nil{
+            if let recipeItem = self.recipeItem{
+                DispatchQueue.main.async{
+                    NutritionManager.nutritionManager.getRecipeNutritionalInfo(with: String(recipeItem.id)) { res in
+                        switch res{
+                        case .success(let item):
+                            self.nutritionalInfo = item
+                        case .failure(let error):
+                            print("RECIPE VIEW :\(error)")
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
     var body: some View {
         HStack{
             VStack{
@@ -219,7 +212,11 @@ struct RecipeSearchResultCell : View {
             Button(){
                 getRecipe()
                 if let recipe = recipeItem{
-                    navigationController.pushViewController(RecipeViewController(recipe: recipe), animated: true)
+                    getNutritionalInfo()
+                    if let nutritionalInfo = self.nutritionalInfo{
+                        navigationController.pushViewController(RecipeViewController(recipe: recipe,nutritionalInfo: nutritionalInfo), animated: true)
+                    }
+                    
                 }
             }label: {
                 Label(

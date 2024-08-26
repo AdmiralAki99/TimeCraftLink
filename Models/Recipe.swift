@@ -49,13 +49,14 @@ struct Measure : Codable{
 }
 
 struct RecipeNutritionInfo : Codable{
-    let calories : String?
-    let carbs : String?
-    let fat : String?
-    let protein : String?
-    let nutrient : [Nutrient]?
+    let calories : String
+    let carbs : String
+    let fat : String
+    let protein : String
+    let nutrients : [Nutrient]?
     let bad : [NutritionType]?
     let good : [NutritionType]?
+    let caloricBreakdown : CaloricalBreakdown
 }
 
 struct NutritionType: Codable{
