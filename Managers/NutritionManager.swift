@@ -135,9 +135,20 @@ class NutritionManager : NSObject,ObservableObject{
             }
             
             do{
-                let data = try JSONDecoder().decode(Recipe.self, from: data)
-                
-                completion(.success(data))
+                var data = try JSONDecoder().decode(Recipe.self, from: data)
+                DispatchQueue.main.async {
+                    self.getRecipeNutritionalInfo(with: "\(recipeID)") { res in
+                        switch res{
+                        case .success(let info):
+                            data.nutritionalInfo = info
+                            break
+                        case .failure(let error ):
+                            print(error)
+                        }
+                        print("NutritionalInfo: \(data.nutritionalInfo)")
+                        completion(.success(data))
+                    }
+                }
             }catch{
                 print("Error: \(String(describing: err))")
                 completion(.failure(APIResponseError.FailedToDecodeData))
@@ -160,7 +171,6 @@ class NutritionManager : NSObject,ObservableObject{
             
             do{
                 let data = try JSONDecoder().decode(RecipeNutritionInfo.self, from: data)
-                
                 completion(.success(data))
             }catch{
                 print("RECIPE NUTR. ERROR")
@@ -430,7 +440,6 @@ class NutritionManager : NSObject,ObservableObject{
     }
     
     func getMealMacros(mealType : MealType,macroType : MacroType,completion: @escaping (Double)->Void){
-        let dispatchGroup = DispatchGroup()
         switch mealType{
         case .Breakfast:
             switch macroType{

@@ -212,11 +212,7 @@ struct RecipeSearchResultCell : View {
             Button(){
                 getRecipe()
                 if let recipe = recipeItem{
-                    getNutritionalInfo()
-                    if let nutritionalInfo = self.nutritionalInfo{
-                        navigationController.pushViewController(RecipeViewController(recipe: recipe,nutritionalInfo: nutritionalInfo), animated: true)
-                    }
-                    
+                    navigationController.pushViewController(RecipeViewController(recipe: recipe,nutritionalInfo: recipe.nutritionalInfo!), animated: true)
                 }
             }label: {
                 Label(

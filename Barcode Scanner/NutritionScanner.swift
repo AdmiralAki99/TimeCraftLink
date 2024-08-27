@@ -70,7 +70,7 @@ struct CameraScanner : View {
                                     if let item = item as? GroceryItem{
                                         GroceryItemCell(scannedFood: item, navigationController: navigationController!)
                                     }else if let item = item as? Recipe{
-                                        Text("Recipe")
+                                        RecipeItemCell(recipeItem: item, navigationController: navigationController!)
                                     }
                                 }
                                 
@@ -101,7 +101,7 @@ struct CameraScanner : View {
                                     if let item = item as? GroceryItem{
                                         GroceryItemCell(scannedFood: item, navigationController: navigationController!)
                                     }else if let item = item as? Recipe{
-                                        Text("Recipe")
+                                        RecipeItemCell(recipeItem: item, navigationController: navigationController!)
                                     }
                                 }
                                 HStack(alignment:.center){
@@ -131,7 +131,7 @@ struct CameraScanner : View {
                                     if let item = item as? GroceryItem{
                                         GroceryItemCell(scannedFood: item, navigationController: navigationController!)
                                     }else if let item = item as? Recipe{
-                                        Text("Recipe")
+                                        RecipeItemCell(recipeItem: item, navigationController: navigationController!)
                                     }
                                 }
                                 HStack(alignment:.center){
@@ -161,7 +161,7 @@ struct CameraScanner : View {
                                     if let item = item as? GroceryItem{
                                         GroceryItemCell(scannedFood: item, navigationController: navigationController!)
                                     }else if let item = item as? Recipe{
-                                        Text("Recipe")
+                                        RecipeItemCell(recipeItem: item, navigationController: navigationController!)
                                     }
                                 }
                                 HStack(alignment:.center){
