@@ -45,25 +45,25 @@ struct FoodScannedItemView : View {
     var body: some View {
         VStack{
             VStack{
-                Text("\(scannedFood.title)").foregroundColor(Color(UIColor.label)).bold().frame(maxWidth: .infinity,alignment: .leading).padding(EdgeInsets(top: 20, leading: 0, bottom: 5, trailing: 0))
+                Text(String(scannedFood.title ?? "")).foregroundColor(Color(UIColor.label)).bold().frame(maxWidth: .infinity,alignment: .leading).padding(EdgeInsets(top: 20, leading: 0, bottom: 5, trailing: 0))
 //                Text("\(scannedFood.)").foregroundColor(Color(UIColor.secondaryLabel)).font(.title3).bold().frame(maxWidth: .infinity,alignment: .leading).padding(EdgeInsets(top: 0, leading: 10, bottom: 0, trailing: 0))
                 HStack{
                     VStack{
                         Text("Protein").font(.caption)
-                        Gauge(value: scannedFood.nutrition.caloricBreakdown.percentProtein, in: 1...100) {
+                        Gauge(value: scannedFood.nutrition?.caloricBreakdown.percentProtein ?? 0.0, in: 1...100) {
                             
                         }.gaugeStyle(.accessoryCircularCapacity).tint(Color.pink)
                     }
                     Spacer()
                     VStack{
                         Text("Carbs").font(.caption)
-                        Gauge(value: scannedFood.nutrition.caloricBreakdown.percentCarbs, in: 1...100) {
+                        Gauge(value: scannedFood.nutrition?.caloricBreakdown.percentCarbs ?? 0.0, in: 1...100) {
                         }.gaugeStyle(.accessoryCircularCapacity).tint(Color.cyan)
                     }
                     Spacer()
                     VStack{
                         Text("Fat").font(.caption)
-                        Gauge(value: scannedFood.nutrition.caloricBreakdown.percentFat, in: 1...100) {
+                        Gauge(value: scannedFood.nutrition?.caloricBreakdown.percentFat ?? 0.0, in: 1...100) {
                         
                         }.gaugeStyle(.accessoryCircularCapacity).tint(Color.green)
                     }
@@ -84,12 +84,12 @@ struct NutrientsView : View {
     }
     
     func getNutrientValueByKey(nutrientKey : String)->Double{
-        let nutrient = self.foodItem.nutrition.nutrients.filter({$0.name == nutrientKey}).first
+        let nutrient = self.foodItem.nutrition?.nutrients.filter({$0.name == nutrientKey}).first
         return nutrient?.amount ?? 0.0
     }
     
     func getNutrientByKey(nutrientKey: String) -> Nutrient?{
-        guard let nutrient = self.foodItem.nutrition.nutrients.filter({$0.name == nutrientKey}).first else { return nil }
+        guard let nutrient = self.foodItem.nutrition?.nutrients.filter({$0.name == nutrientKey}).first else { return nil }
         return nutrient
     }
     
@@ -98,7 +98,7 @@ struct NutrientsView : View {
             VStack{
                 HStack{
                     Text("Serving Size").frame(maxWidth: .infinity,alignment: .leading).bold()
-                    Text("\(foodItem.servings.raw)").bold().frame(maxWidth: .infinity,alignment: .trailing)
+                    Text(String(foodItem.servings?.raw ?? "")).bold().frame(maxWidth: .infinity,alignment: .trailing)
                 }
                 HStack{
                     Text("Number of Servings").frame(maxWidth: .infinity,alignment: .leading).bold()
@@ -106,7 +106,7 @@ struct NutrientsView : View {
                 }
                 HStack{
                     Text("Calories").frame(maxWidth: .infinity,alignment: .leading).bold()
-                    Text("\(Int(foodItem.nutrition.calories))").bold().frame(maxWidth: .infinity,alignment: .trailing)
+                    Text("\(Int(foodItem.nutrition?.calories ?? 0.0))").bold().frame(maxWidth: .infinity,alignment: .trailing)
                 }
             }
             VStack{

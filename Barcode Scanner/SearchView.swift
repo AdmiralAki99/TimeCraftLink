@@ -36,6 +36,8 @@ struct NutritionSearchResultView : View {
     @State private var searchGroceryResults : [GrocerySearchResult] = []
     @State private var searchIngredientResults : [IngredientSearchResult] = []
     
+    private let columnVal = [GridItem(.adaptive(minimum: 150))]
+    
     private var navigationController : UINavigationController
     
     init(navigationController : UINavigationController){
@@ -45,12 +47,14 @@ struct NutritionSearchResultView : View {
     var body: some View {
         TabView{
             NavigationStack{
-                List{
-                    if searchRecipeText == "" {
+                ScrollView{
+                    LazyVGrid(columns: columnVal, spacing: 20){
+                        if searchRecipeText == "" {
 
-                    }else{
-                        ForEach(self.searchResults,id: \.id){ item in
-                            RecipeSearchResultCell(navigationController: navigationController, searchResult: item)
+                        }else{
+                            ForEach(self.searchResults,id: \.id){ item in
+                                RecipeSearchResultCell(navigationController: navigationController, searchResult: item).frame(width: UIScreen.screenWidth/2)
+                            }
                         }
                     }
                 }
@@ -142,19 +146,13 @@ struct SearchGroceryItemCell : View {
             VStack{
                 Text("\(searchResult.title)").truncationMode(.tail)
             }
-            Button(){
-                DispatchQueue.main.async{
-                    getGroceryItem()
-                }
-                if let food = self.foodItem{
-                    navigationController.pushViewController(GrocerySearchItemViewController(foodItem: food), animated: true)
-                }
-            }label: {
-                Label(
-                    title: { Text("") },
-                    icon: { Image(systemName: "chevron.right").foregroundColor(Color(UIColor.label)) }
-                )
-            }.frame(maxWidth: .infinity,alignment: .trailing).controlSize(.small).frame(maxWidth: .infinity,alignment: .trailing)
+        }.onTapGesture {
+            DispatchQueue.main.async{
+                getGroceryItem()
+            }
+            if let food = self.foodItem{
+                navigationController.pushViewController(GrocerySearchItemViewController(foodItem: food), animated: true)
+            }
         }
     }
 }
@@ -172,7 +170,6 @@ struct RecipeSearchResultCell : View {
     
     func getRecipe(){
         if recipeItem == nil{
-            print("ID: \(searchResult.id)")
             DispatchQueue.main.async{
                 NutritionManager.nutritionManager.searchRecipeFromID(with:self.searchResult.id, completion: { res in
                     switch res{
@@ -206,20 +203,19 @@ struct RecipeSearchResultCell : View {
     
     var body: some View {
         HStack{
+            AsyncImage(url: URL(string: searchResult.image)) { image in
+                image.resizable()
+            } placeholder: {
+                ProgressView()
+            }.padding(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 10)).frame(width: 50,height: 50)
             VStack{
-                Text("\(searchResult.title)").truncationMode(.tail)
+                Text("\(searchResult.title)").truncationMode(.tail).lineLimit(2)
             }
-            Button(){
-                getRecipe()
-                if let recipe = recipeItem{
-                    navigationController.pushViewController(RecipeViewController(recipe: recipe,nutritionalInfo: recipe.nutritionalInfo!), animated: true)
-                }
-            }label: {
-                Label(
-                    title: { Text("") },
-                    icon: { Image(systemName: "chevron.right").foregroundColor(Color(UIColor.label)) }
-                )
-            }.frame(maxWidth: .infinity,alignment: .trailing).controlSize(.small).frame(maxWidth: .infinity,alignment: .trailing)
+        }.onTapGesture {
+            getRecipe()
+            if let recipe = recipeItem{
+                navigationController.pushViewController(RecipeViewController(recipe: recipe,nutritionalInfo: recipe.nutritionalInfo!), animated: true)
+            }
         }
     }
 }

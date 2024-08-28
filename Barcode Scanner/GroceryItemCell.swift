@@ -22,8 +22,8 @@ struct GroceryItemCell : View {
     var body: some View {
         HStack{
             VStack{
-                Text("\(scannedFood.title)").truncationMode(.tail)
-                Text("\(scannedFood.brand)").font(.caption)
+                Text(String(scannedFood.title ?? "")).truncationMode(.tail)
+//                Text("\(scannedFood.brand)").font(.caption)
             }
             Button(){
                 navigationController.pushViewController(GroceryItemViewController(foodItem: scannedFood), animated: true)
