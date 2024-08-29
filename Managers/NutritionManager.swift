@@ -406,6 +406,7 @@ class NutritionManager : NSObject,ObservableObject{
         case .Breakfast:
             self.breakfastMeals.append(meal)
             self.addMacros(meal: meal)
+            DataManager.data_manager.saveMealItem(mealType: "Breakfast", meal: self.breakfastMeals)
             break
         case .Lunch:
             self.lunchMeals.append(meal)
@@ -688,6 +689,28 @@ class NutritionManager : NSObject,ObservableObject{
     
     func getRemainingFat() -> Double{
         return self.fatDailyIntakeLimit - self.dailyFatIntake
+    }
+    
+    func encodeMeal(mealType : MealType){
+        switch mealType{
+        case .Breakfast:
+            let encoder = JSONEncoder()
+            
+            do{
+                let encodedMeals =  try self.breakfastMeals.map({try encoder.encode($0)})
+                
+            }catch{
+                
+            }
+            
+            break
+        case .Lunch:
+            break
+        case .Dinner:
+            break
+        case .Snack:
+            break
+        }
     }
     
     
