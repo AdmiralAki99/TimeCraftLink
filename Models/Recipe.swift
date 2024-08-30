@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Recipe : Food,Identifiable{
+class Recipe : NSObject,Food,Identifiable{
     var id : Int
     let vegetarian : Bool?
     let vegan : Bool?
@@ -25,9 +25,10 @@ struct Recipe : Food,Identifiable{
     let sourceUrl : String?
     let sourceName : String?
     let image : String?
+    var nutritionalInfo : RecipeNutritionInfo?
 }
 
-struct RecipeIngredient : Codable{
+class RecipeIngredient : NSObject,Codable{
     let id : Int?
     let image : String?
     let name : String?
@@ -38,17 +39,17 @@ struct RecipeIngredient : Codable{
     let measures : Measures?
 }
 
-struct Measures : Codable{
+class Measures : NSObject,Codable{
     let us : Measure?
     let metric : Measure?
 }
 
-struct Measure : Codable{
+class Measure : NSObject,Codable{
     let amount : Double?
     let unitShort : String?
 }
 
-struct RecipeNutritionInfo : Codable{
+class RecipeNutritionInfo : NSObject,Codable{
     let calories : String
     let carbs : String
     let fat : String
@@ -59,26 +60,26 @@ struct RecipeNutritionInfo : Codable{
     let caloricBreakdown : CaloricalBreakdown
 }
 
-struct NutritionType: Codable{
+class NutritionType: NSObject,Codable{
     let amount: String?
     let indented : Bool?
     let title : String?
     let percentOfDailyNeeds : Double?
 }
 
-struct RecipeStep : Codable{
+class RecipeStep : NSObject,Codable{
     let number : Int?
     let name : String?
     let steps : [Step]?
 }
 
-struct Step : Codable{
+class Step : NSObject,Codable{
     let number : Int
     let step : String?
     let ingredients : [StepIngredient]
 }
 
-struct StepIngredient : Codable,Identifiable{
+class StepIngredient : NSObject,Codable,Identifiable{
     let id : Int
     let name : String?
     let localizedName : String?

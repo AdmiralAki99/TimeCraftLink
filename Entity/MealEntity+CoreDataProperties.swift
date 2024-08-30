@@ -17,9 +17,9 @@ extension MealEntity {
     }
 
     @NSManaged public var date: Date?
-    @NSManaged var grocery: [GroceryItem]?
+    @NSManaged var grocery: GroceryItem?
     @NSManaged public var mealType: String?
-    @NSManaged var recipe: [Recipe]?
+    @NSManaged var recipe: Recipe?
 
 }
 

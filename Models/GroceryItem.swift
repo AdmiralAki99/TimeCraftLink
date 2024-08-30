@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Nutrient : Codable,Identifiable{
+class Nutrient : NSObject,Codable,Identifiable{
     let id = UUID()
     let name : String
     let amount : Double
@@ -15,13 +15,13 @@ struct Nutrient : Codable,Identifiable{
     let percentOfDailyNeeds : Double
 }
 
-struct CaloricalBreakdown : Codable{
+class CaloricalBreakdown : NSObject,Codable{
     let percentProtein : Double
     let percentFat : Double
     let percentCarbs : Double
 }
 
-struct Nutrition : Codable{
+class Nutrition : NSObject,Codable{
     let nutrients : [Nutrient]
     let caloricBreakdown : CaloricalBreakdown
     let calories : Double
@@ -30,14 +30,14 @@ struct Nutrition : Codable{
     let carbs : String
 }
 
-struct Servings : Codable{
+class Servings : NSObject,Codable{
     let number : Double?
     let size : Double?
     let unit : String?
     let raw : String?
 }
 
-struct GroceryItem : Food,Identifiable{
+class GroceryItem : NSObject,Food,Identifiable{
     var id: Int
     let title: String?
     let badges : [String]?
@@ -45,14 +45,14 @@ struct GroceryItem : Food,Identifiable{
     let generatedText : String?
     let nutrition : Nutrition?
     let servings : Servings?
-    let description : String?
+//    override var description : String
     let image : String?
     let imageType : String?
     let images : [String]?
     let brand : String?
 }
 
-protocol Food: Identifiable,Codable{
+protocol Food: NSObject,Identifiable,Codable{
     var id : Int {get set}
 }
 
