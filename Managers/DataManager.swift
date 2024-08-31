@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import CoreData
+import SwiftData
 
 enum FilePath : String{
     case ToDoListManager
@@ -54,16 +54,19 @@ class DataManager{
     private let decoder = JSONDecoder()
     
     // Using the same CoreData Stack made in AppDelegate just in a manager form to use everywhere
-    private let dataModel : NSPersistentContainer
+    private var dataModel : ModelContainer = {
+        do{
+            return try ModelContainer(for: MealModel.self,DailyNutritionalInfo.self,configurations: ModelConfiguration(isStoredInMemoryOnly: true,allowsSave: true))
+        }catch{
+            fatalError("Failed to create SwiftData Model")
+        }
+    }()
+    
+    private var modelContext : ModelContext
     
     init(){
         encoder.outputFormatting = .prettyPrinted
-        self.dataModel = NSPersistentContainer(name: "TimeCraft")
-        dataModel.loadPersistentStores(completionHandler: { (storeDescription, error) in
-            if let error = error as NSError? {
-                fatalError("FATAL ERROR \(error), \(error.userInfo)")
-            }
-        })
+        modelContext = ModelContext(dataModel)
     }
     
     func writeToFile(with type : FilePath, data: Codable){
@@ -123,157 +126,33 @@ class DataManager{
         }
     }
     
-    
-    func saveDailyNutritionalInfo(dailyProteinIntake: Double, dailyCarbIntake : Double, dailyFatIntake : Double,dailyCaloricalIntake : Double){
-        let info = DailyNutritionalInfo(context: self.dataModel.viewContext)
-        info.dailyProteinIntake = dailyProteinIntake
-        info.dailyFatIntake = dailyFatIntake
-        info.dailyCarbIntake = dailyCarbIntake
-        info.dailyCaloricalIntake = dailyCaloricalIntake
-        info.date = Date()
-        
+    func saveGroceryModel(mealType: String,meal: GroceryItem){
+        let item = MealModel(mealType: mealType, date: Date(), meal: meal)
+        modelContext.insert(item)
+        print("Saved Meals Successfully")
+        let description = FetchDescriptor<MealModel>()
         do{
-            try self.dataModel.viewContext.save()
+            let model = try modelContext.fetch(description)
+            print("Number Of Models :\(model.count)")
         }catch{
             
         }
     }
     
-    func updateDailyNutritonalInfo(dailyProteinIntake: Double,nutritionalEntity: DailyNutritionalInfo){
-        nutritionalEntity.dailyProteinIntake = dailyProteinIntake
+    func deleteGroceryModel(mealType: String,id: Int){
+        let queryPred = #Predicate<MealModel>{$0.meal.id == id}
+        var description = FetchDescriptor<MealModel>(predicate: queryPred)
+        do{
+            let model = try modelContext.fetch(description)
+            for meal in model{
+                modelContext.delete(meal)
+            }
+            print("Deleted Meals Successfully")
+        }catch{
+            fatalError("No Model Exists with the ID")
+        }
         
-        do{
-            try self.dataModel.viewContext.save()
-        }catch{
-            fatalError(String(describing: ErrorType.FailedToUpdate))
-        }
-    }
-    
-    func updateDailyNutritonalInfo(dailyFatIntake: Double,nutritionalEntity: DailyNutritionalInfo){
-        nutritionalEntity.dailyFatIntake = dailyFatIntake
-        
-        do{
-            try self.dataModel.viewContext.save()
-        }catch{
-            fatalError(String(describing: ErrorType.FailedToUpdate))
-        }
-    }
-    
-    func updateDailyNutritonalInfo(dailyCarbIntake: Double,nutritionalEntity: DailyNutritionalInfo){
-        nutritionalEntity.dailyCarbIntake = dailyCarbIntake
-        
-        do{
-            try self.dataModel.viewContext.save()
-        }catch{
-            fatalError(String(describing: ErrorType.FailedToUpdate))
-        }
-    }
-    
-    func updateDailyNutritonalInfo(dailyCaloricalIntake: Double,nutritionalEntity: DailyNutritionalInfo){
-        nutritionalEntity.dailyCaloricalIntake = dailyCaloricalIntake
-        
-        do{
-            try self.dataModel.viewContext.save()
-        }catch{
-            fatalError(String(describing: ErrorType.FailedToUpdate))
-        }
-    }
-    
-    
-    func saveMealItem(mealType : String,meal: [any Food]){
-        let info = MealEntity(context: self.dataModel.viewContext)
-        info.date = Date()
-        let grocery = meal.compactMap({$0 as? GroceryItem})
-        let recipe = meal.compactMap({$0 as? Recipe})
-        info.grocery = grocery.isEmpty ? [] : grocery
-        info.recipe = recipe.isEmpty ? [] : recipe
-        info.mealType = mealType
-        print("DATA MODEL: \(info)")
-        do{
-            try self.dataModel.viewContext.save()
-        }catch{
-            fatalError(String(describing: ErrorType.FailedToSave))
-        }
         
         
     }
-    
-    func deleteDailyNutritionalInfo(nutritionalEntity: DailyNutritionalInfo){
-        
-        self.dataModel.viewContext.delete(nutritionalEntity)
-        
-        do{
-            try self.dataModel.viewContext.save()
-        }catch{
-            fatalError(String(describing: ErrorType.FailedToUpdate))
-        }
-    }
-    
-    func updateMealItem(mealEntity : MealEntity, meal: [any Food]){
-        let grocery = meal.compactMap({$0 as? GroceryItem})
-        let recipe = meal.compactMap({$0 as? Recipe})
-        mealEntity.grocery = grocery
-        mealEntity.recipe = recipe
-        
-        do{
-            try self.dataModel.viewContext.save()
-        }catch{
-            fatalError(String(describing: ErrorType.FailedToUpdate))
-        }
-    }
-    
-    func deleteMeal(mealEntity: MealEntity){
-        
-        self.dataModel.viewContext.delete(mealEntity)
-        
-        do{
-            try self.dataModel.viewContext.save()
-        }catch{
-            fatalError(String(describing: ErrorType.FailedToUpdate))
-        }
-    }
-    
-    func getTodaysMeal(){
-        let now = Date()
-        let startOfToday = Calendar.current.startOfDay(for: now)
-        guard let endOfToday = Calendar.current.date(byAdding: .day, value: 1, to: startOfToday) else{
-            return
-        }
-        
-        let fetchReq : NSFetchRequest<MealEntity> = MealEntity.fetchRequest()
-        fetchReq.predicate = NSPredicate(format: "%K >= %@ AND %K < %@","date",startOfToday as NSDate, "date",endOfToday as NSDate)
-        
-        do{
-            let res = try self.dataModel.viewContext.fetch(fetchReq)
-            
-            print(res)
-        }catch{
-            fatalError(String(describing: ErrorType.FailedToGetTodaysMeals))
-        }
-        
-    }
-    
-    func getMealsOnDate(date: Date){
-        
-        let startOfToday = Calendar.current.startOfDay(for: date)
-        guard let endOfToday = Calendar.current.date(byAdding: .day, value: 1, to: startOfToday) else{
-            return
-        }
-        
-        let fetchReq : NSFetchRequest<MealEntity> = MealEntity.fetchRequest()
-        fetchReq.predicate = NSPredicate(format: "%K >= %@ AND %K < %@","date",startOfToday as NSDate, "date",endOfToday as NSDate)
-        
-        do{
-            let res = try self.dataModel.viewContext.fetch(fetchReq)
-            
-            print(res)
-        }catch{
-            fatalError(String(describing: ErrorType.FailedToGetMealsOnDate))
-        }
-    }
-    
-    
-//    func writeToFile(with file : File){
-//
-//    }
 }
