@@ -28,7 +28,7 @@ enum FilePath : String{
     }
 }
 
-class DataManager{
+class DataManager : ObservableObject{
     
     enum DataManagerAPIError : Error{
         case FailedToEncode
@@ -53,106 +53,72 @@ class DataManager{
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
     
-    // Using the same CoreData Stack made in AppDelegate just in a manager form to use everywhere
-    private var dataModel : ModelContainer = {
-        do{
-            return try ModelContainer(for: MealModel.self,DailyNutritionalInfo.self,configurations: ModelConfiguration(isStoredInMemoryOnly: true,allowsSave: true))
-        }catch{
-            fatalError("Failed to create SwiftData Model")
-        }
-    }()
+    @Published var mealList : [MealModel] = []
     
-    private var modelContext : ModelContext
+    var swiftDataModelContext : ModelContext? = nil
+    var swiftDataContainer : ModelContainer? = nil
+    
+//     Using the same CoreData Stack made in AppDelegate just in a manager form to use everywhere
     
     init(){
-        encoder.outputFormatting = .prettyPrinted
-        modelContext = ModelContext(dataModel)
+        do{
+            let containerConfig = ModelConfiguration(isStoredInMemoryOnly: false)
+            let modelContainer = try ModelContainer(for: MealModel.self, configurations: containerConfig)
+            self.swiftDataContainer = modelContainer
+            
+            DispatchQueue.main.async{
+                self.swiftDataModelContext = modelContainer.mainContext
+                self.swiftDataModelContext?.autosaveEnabled = true
+                self.fetchMeals()
+            }
+        }catch{
+            print("Error: \(error.localizedDescription)")
+            fatalError("Not able to create SwiftData Model Container")
+        }
     }
     
-    func writeToFile(with type : FilePath, data: Codable){
-        encode(with: data) { result in
-            switch result{
-            case .success(let data):
-                do{
-                    try data.write(to: type.filePath)
-                }catch{
-                    print(error.localizedDescription)
-                }
-            case .failure(let error):
-                print(error.localizedDescription)
-            }
+    private func fetchMeals(){
+        guard let modelContext = self.swiftDataModelContext else{
+            return
         }
         
-    }
-    
-    func encode(with data : Codable , completion: @escaping(Result<Data,Error>)->Void){
+        var fetchReqDescriptor = FetchDescriptor<MealModel>(predicate: nil)
+        
         do{
-            let encodedString = try encoder.encode(data)
-            completion(.success(encodedString))
+            self.mealList = try modelContext.fetch(fetchReqDescriptor)
         }catch{
-            completion(.failure(DataManagerAPIError.FailedToEncode))
+            print("Error: \(error.localizedDescription)")
+            fatalError("Not able to fetch meals from Context")
         }
     }
     
-    func decode(type : DataDecodeType, data : Data,completion: @escaping(Result<Codable,Error>) -> Void){
-        switch type{
-        case .ToDoListManager:
-            do{
-                let data = try decoder.decode([ToDoListCategory].self, from: data)
-                completion(.success(data))
-            }catch{
-                print(error.localizedDescription)
-                completion(.failure(DataManagerAPIError.FailedToDecode))
-            }
+    func addMeal(mealType: String, meal : GroceryItem){
+        guard let modelContext = self.swiftDataModelContext else{
+            return
         }
-    }
-    
-    func readFromFile(type : FilePath,completion: @escaping(Result<Codable,Error>)->Void){
-        switch type{
-        case .ToDoListManager:
-            do{
-                let data = try Data(contentsOf: type.filePath)
-                decode(type: .ToDoListManager, data: data) { result in
-                    switch result{
-                    case .success(let data):
-                        completion(.success(data))
-                    case .failure(let error):
-                        completion(.failure(DataManagerAPIError.FailedToReadFromFile))
-                    }
-                }
-            }catch{
-                print("Cannot Read From File")
-            }
-        }
-    }
-    
-    func saveGroceryModel(mealType: String,meal: GroceryItem){
+
         let item = MealModel(mealType: mealType, date: Date(), meal: meal)
         modelContext.insert(item)
-        print("Saved Meals Successfully")
-        let description = FetchDescriptor<MealModel>()
-        do{
-            let model = try modelContext.fetch(description)
-            print("Number Of Models :\(model.count)")
-        }catch{
-            
-        }
+        fetchMeals()
     }
     
-    func deleteGroceryModel(mealType: String,id: Int){
-        let queryPred = #Predicate<MealModel>{$0.meal.id == id}
-        var description = FetchDescriptor<MealModel>(predicate: queryPred)
-        do{
-            let model = try modelContext.fetch(description)
-            for meal in model{
-                modelContext.delete(meal)
-            }
-            print("Deleted Meals Successfully")
-        }catch{
-            fatalError("No Model Exists with the ID")
-        }
-        
-        
+    func addMeal(mealType:String, meal: Recipe){
         
     }
+    
+    
+    private func saveModelContext(){
+        guard let modelContext = self.swiftDataModelContext else{
+            return
+        }
+        
+        do{
+            try modelContext.save()
+        }catch{
+            print("Error: \(error.localizedDescription)")
+            fatalError("Not able to save ModelContext")
+        }
+    }
+        
+        
 }

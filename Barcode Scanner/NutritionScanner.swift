@@ -38,7 +38,12 @@ struct CameraScanner : View {
     @State private var lunchMeals : [any Food] = []
     @State private var dinnerMeals : [any Food] = []
     @State private var snackMeals : [any Food] = []
+    
+    @StateObject var nutritionManager = DataManager.data_manager
+    
     private var navigationController : UINavigationController?
+    
+    @State private var modelCount : Int = 0
     
     private var macroColors: [Color] = [Color.pink,Color.cyan,Color.green]
     
@@ -95,7 +100,7 @@ struct CameraScanner : View {
                         List{
                             SwiftUI.Section(header: NutiritionSectionHeader(macroColors: self.macroColors, title: "Lunch")) {
                                 if self.lunchMeals.isEmpty{
-                                    Text("No Meals Entered....").foregroundColor(Color(UIColor.secondaryLabel))
+                                    Text("\(nutritionManager.mealList.count)").foregroundColor(Color(UIColor.secondaryLabel))
                                 }
                                 ForEach(self.lunchMeals,id: \.id) { item in
                                     if let item = item as? GroceryItem{
@@ -223,6 +228,7 @@ struct CameraScanner : View {
             self.lunchMeals = NutritionManager.nutritionManager.getMeals(mealType: .Lunch)
             self.dinnerMeals = NutritionManager.nutritionManager.getMeals(mealType: .Dinner)
             self.snackMeals = NutritionManager.nutritionManager.getMeals(mealType: .Snack)
+            print(nutritionManager.mealList)
         }
     }
 }

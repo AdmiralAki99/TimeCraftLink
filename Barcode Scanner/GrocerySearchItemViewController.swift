@@ -11,9 +11,8 @@ import UIKit
 
 class GrocerySearchItemViewController : UIViewController{
     
-    var foodItem : GroceryItem = {
-        return GroceryItem(id: 0, title: nil, badges: nil, importantBadges: nil, generatedText: nil, nutrition: nil, servings: nil, description: nil, image: nil, imageType: nil, images: nil, brand: nil)
-    }()
+    var foodItem : GroceryItem? = nil
+    @StateObject var nutritionManager = DataManager.data_manager
     
     init(foodItem: GroceryItem) {
         super.init(nibName: nil, bundle: nil)
@@ -28,7 +27,7 @@ class GrocerySearchItemViewController : UIViewController{
         
         view.overrideUserInterfaceStyle = .dark
         
-        let vc = UIHostingController(rootView: GrocerySearchItemView(scannedFood: foodItem))
+        let vc = UIHostingController(rootView: GrocerySearchItemView(scannedFood: foodItem!))
         let foodView = vc.view!
         foodView.translatesAutoresizingMaskIntoConstraints = false
         addChild(vc)
@@ -82,6 +81,7 @@ struct GrocerySearchItemView : View {
 
 struct GrocerySearchItemNutrientsView : View {
     private let foodItem : GroceryItem
+    @StateObject var nutritionManager = DataManager.data_manager
     @State private var mealSelection = "Breakfast"
     private let meals =  ["Breakfast","Lunch","Dinner","Snack"]
     
@@ -199,6 +199,7 @@ struct GrocerySearchItemNutrientsView : View {
                     switch mealSelection{
                     case "Breakfast":
                         NutritionManager.nutritionManager.addMealToList(mealType: .Breakfast, meal: foodItem)
+                        nutritionManager.addMeal(mealType: "Breakfast", meal: foodItem)
                         break
                     case "Lunch":
                         NutritionManager.nutritionManager.addMealToList(mealType: .Lunch, meal: foodItem)
