@@ -12,6 +12,7 @@ import Charts
 class FoodItemScannedViewController : UIViewController{
     
     var scannedFoodItem : GroceryItem?
+    @StateObject var nutritionManager = DataManager.data_manager
     
     init(scannedFoodItem: GroceryItem) {
         super.init(nibName: nil, bundle: nil)

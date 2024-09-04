@@ -203,12 +203,15 @@ struct GrocerySearchItemNutrientsView : View {
                         break
                     case "Lunch":
                         NutritionManager.nutritionManager.addMealToList(mealType: .Lunch, meal: foodItem)
+                        nutritionManager.addMeal(mealType: "Lunch", meal: foodItem)
                         break
                     case "Dinner":
                         NutritionManager.nutritionManager.addMealToList(mealType: .Dinner, meal: foodItem)
+                        nutritionManager.addMeal(mealType: "Dinner", meal: foodItem)
                         break
                     case "Snack":
                         NutritionManager.nutritionManager.addMealToList(mealType: .Snack, meal: foodItem)
+                        nutritionManager.addMeal(mealType: "Snack", meal: foodItem)
                         break
                     default:
                         fatalError("Wrong Meal Selection")

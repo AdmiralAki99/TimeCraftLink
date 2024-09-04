@@ -51,8 +51,8 @@ struct CameraScanner : View {
         self.navigationController = navigationController
     }
     
-    func getMeals(){
-        self.breakfastMeals = NutritionManager.nutritionManager.getMeals(mealType: .Breakfast)
+    func convertMealModels(mealModels : [MealModel]){
+        
     }
     
     var body: some View {

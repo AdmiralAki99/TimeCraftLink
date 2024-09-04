@@ -46,6 +46,8 @@ class NutritionManager : NSObject,ObservableObject{
     private var carbsDailyIntakeLimit : Double = 100.0
     private var caloricalDailyLimit : Double = 1500.0
     
+    private let encoder : JSONEncoder = JSONEncoder()
+    
     private var apiKey : String
     
     
@@ -73,7 +75,6 @@ class NutritionManager : NSObject,ObservableObject{
         }else{
             self.apiKey = ""
         }
-        print("API KEY: \(self.apiKey)")
     }
     
     func searchBarcodeID(with barcodeNumber: String,completion: @escaping (Result<GroceryItem,Error>)->Void){
@@ -406,7 +407,7 @@ class NutritionManager : NSObject,ObservableObject{
         case .Breakfast:
             self.breakfastMeals.append(meal)
             self.addMacros(meal: meal)
-            DataManager.data_manager.saveMealItem(mealType: "Breakfast", meal: self.breakfastMeals)
+//            DataManager.data_manager.saveGroceryModel(mealType: "Breakfast", meal: meal as! GroceryItem)
             break
         case .Lunch:
             self.lunchMeals.append(meal)
@@ -566,7 +567,7 @@ class NutritionManager : NSObject,ObservableObject{
                     if let item = item as? GroceryItem{
                         sum = partialResult + ((item.nutrition?.nutrients.filter({$0.name == "Protein"}).first)?.amount ?? 0.0)
                     }else if let item = item as? Recipe{
-                        
+//                        sum = partialResult + ((item.nutrients?.filter({$0.name == "Protein"}).first)?.amount ?? 0.0)
                     }
                     return sum
                 }
@@ -691,27 +692,44 @@ class NutritionManager : NSObject,ObservableObject{
         return self.fatDailyIntakeLimit - self.dailyFatIntake
     }
     
-    func encodeMeal(mealType : MealType){
-        switch mealType{
-        case .Breakfast:
-            let encoder = JSONEncoder()
-            
+    func encodeMeal(foodItem : any Food,completion: @escaping(String)->Void){
+        if let item = foodItem as? GroceryItem{
             do{
-                let encodedMeals =  try self.breakfastMeals.map({try encoder.encode($0)})
-                
+                let encodedData = try encoder.encode(item)
+                guard let data = String(data: encodedData, encoding: .utf8) else{
+                    fatalError("String Failed To Create")
+                }
+                completion(data)
             }catch{
-                
+                fatalError("Could Not Encode GroceryItem")
             }
-            
-            break
-        case .Lunch:
-            break
-        case .Dinner:
-            break
-        case .Snack:
-            break
+        }else if let item = foodItem as? Recipe{
+            do{
+                let encodedData = try encoder.encode(item)
+                guard let data = String(data: encodedData, encoding: .utf8) else{
+                    fatalError("String Failed To Create")
+                }
+                completion(data)
+            }catch{
+                fatalError("Could Not Encode GroceryItem")
+            }
         }
     }
     
-    
+     func initializeMeal(mealType : MealType,meals:[any Food]){
+        switch mealType{
+        case .Breakfast:
+            self.breakfastMeals = self.breakfastMeals + meals
+            break
+        case .Lunch:
+            self.lunchMeals = meals
+            break
+        case .Dinner:
+            self.dinnerMeals = meals
+            break
+        case .Snack:
+            self.snacks = meals
+            break
+        }
+    }
 }

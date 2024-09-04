@@ -11,13 +11,9 @@ import WebKit
 
 class RecipeViewController : UIViewController{
     
-    private var recipe: Recipe = {
-        return Recipe(id: 0, vegetarian: nil, vegan: nil, glutenFree: nil, dairyFree: nil, preparationMinutes: nil, cookingMinutes: nil, extendedIngredients: nil, nutrition: nil, analyzedInstructions: nil,title: nil, readyInMinutes: nil,servings:nil,summary: nil,sourceUrl: nil, sourceName: nil, image: nil, nutritionalInfo: nil)
-    }()
+    private var recipe: Recipe? = nil
     
-    private var nutritionalInfo : RecipeNutritionInfo = {
-        return RecipeNutritionInfo(calories: "", carbs: "", fat: "", protein: "", nutrients: [], bad: [], good: [], caloricBreakdown: CaloricalBreakdown(percentProtein: 0.0, percentFat: 0.0, percentCarbs: 0.0))
-    }()
+    private var nutritionalInfo : RecipeNutritionInfo? = nil
     
     init(recipe: Recipe,nutritionalInfo : RecipeNutritionInfo){
         super.init(nibName: nil, bundle: nil)
@@ -32,7 +28,7 @@ class RecipeViewController : UIViewController{
     override func viewDidLoad() {
         view.overrideUserInterfaceStyle = .dark
         print(self.nutritionalInfo)
-        let vc = UIHostingController(rootView: RecipeView(recipeItem: recipe, recipeNutritionalInfo: nutritionalInfo))
+        let vc = UIHostingController(rootView: RecipeView(recipeItem: recipe!, recipeNutritionalInfo: nutritionalInfo!))
         let recipeView = vc.view!
         recipeView.translatesAutoresizingMaskIntoConstraints = false
         addChild(vc)
@@ -46,7 +42,7 @@ class RecipeViewController : UIViewController{
     
     func getNutritionalInfo(){
         DispatchQueue.main.async{
-            NutritionManager.nutritionManager.getRecipeNutritionalInfo(with: String(self.recipe.id)) { res in
+            NutritionManager.nutritionManager.getRecipeNutritionalInfo(with: String(self.recipe?.id ?? 0)) { res in
                 switch res{
                 case .success(let item):
                     self.nutritionalInfo = item
@@ -56,6 +52,8 @@ class RecipeViewController : UIViewController{
             }
         }
     }
+    
+    
 }
 
 struct RecipeView : View {
@@ -65,6 +63,8 @@ struct RecipeView : View {
     @State private var recipeReveal : Bool = true
     @State private var mealSelection = "Breakfast"
     private let meals =  ["Breakfast","Lunch","Dinner","Snack"]
+    
+    @StateObject var nutritionManager = DataManager.data_manager
     
     init(recipeItem: Recipe, recipeNutritionalInfo: RecipeNutritionInfo) {
         self.recipeItem = recipeItem
@@ -212,18 +212,22 @@ struct RecipeView : View {
                     case "Breakfast":
                         NutritionManager.nutritionManager.addMealToList(mealType: .Breakfast, meal: recipeItem)
                         NutritionManager.nutritionManager.addRecipeNutritionalInfo(mealType: .Breakfast, nutritionInfo: recipeNutritionalInfo)
+                        nutritionManager.addMeal(mealType: "Breakfast", meal: recipeItem)
                         break
                     case "Lunch":
                         NutritionManager.nutritionManager.addMealToList(mealType: .Lunch, meal: recipeItem)
                         NutritionManager.nutritionManager.addRecipeNutritionalInfo(mealType: .Lunch, nutritionInfo: recipeNutritionalInfo)
+                        nutritionManager.addMeal(mealType: "Lunch", meal: recipeItem)
                         break
                     case "Dinner":
                         NutritionManager.nutritionManager.addMealToList(mealType: .Dinner, meal: recipeItem)
                         NutritionManager.nutritionManager.addRecipeNutritionalInfo(mealType: .Dinner, nutritionInfo: recipeNutritionalInfo)
+                        nutritionManager.addMeal(mealType: "Dinner", meal: recipeItem)
                         break
                     case "Snack":
                         NutritionManager.nutritionManager.addMealToList(mealType: .Snack, meal: recipeItem)
                         NutritionManager.nutritionManager.addRecipeNutritionalInfo(mealType: .Snack, nutritionInfo: recipeNutritionalInfo)
+                        nutritionManager.addMeal(mealType: "Snack", meal: recipeItem)
                         break
                     default:
                         fatalError("Wrong Meal Selection")
@@ -233,6 +237,7 @@ struct RecipeView : View {
                 }.padding(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 10)).tint(Color.pink)
             }.padding(EdgeInsets(top: 10, leading: 0, bottom: 10, trailing: 10))
         }.onAppear(){
+           
         }
     }
 }

@@ -11,13 +11,9 @@ import SwiftUI
 
 class RecipeItemViewController : UIViewController{
     
-    private var recipe: Recipe = {
-        return Recipe(id: 0, vegetarian: nil, vegan: nil, glutenFree: nil, dairyFree: nil, preparationMinutes: nil, cookingMinutes: nil, extendedIngredients: nil, nutrition: nil, analyzedInstructions: nil,title: nil, readyInMinutes: nil,servings:nil,summary: nil,sourceUrl: nil, sourceName: nil, image: nil, nutritionalInfo: nil)
-    }()
+    private var recipe: Recipe? = nil
     
-    private var nutritionalInfo : RecipeNutritionInfo = {
-        return RecipeNutritionInfo(calories: "", carbs: "", fat: "", protein: "", nutrients: [], bad: [], good: [], caloricBreakdown: CaloricalBreakdown(percentProtein: 0.0, percentFat: 0.0, percentCarbs: 0.0))
-    }()
+    private var nutritionalInfo : RecipeNutritionInfo? = nil
     
     init(recipe: Recipe,nutritionalInfo : RecipeNutritionInfo){
         super.init(nibName: nil, bundle: nil)
@@ -32,7 +28,7 @@ class RecipeItemViewController : UIViewController{
     override func viewDidLoad() {
         view.overrideUserInterfaceStyle = .dark
         print(self.nutritionalInfo)
-        let vc = UIHostingController(rootView: RecipeItemView(recipeItem: recipe, recipeNutritionalInfo: nutritionalInfo))
+        let vc = UIHostingController(rootView: RecipeItemView(recipeItem: recipe!, recipeNutritionalInfo: nutritionalInfo!))
         let recipeView = vc.view!
         recipeView.translatesAutoresizingMaskIntoConstraints = false
         addChild(vc)

@@ -11,9 +11,8 @@ import Charts
 
 class GroceryItemViewController : UIViewController{
     
-    var foodItem : GroceryItem = {
-        return GroceryItem(id: 0, title: nil, badges: nil, importantBadges: nil, generatedText: nil, nutrition: nil, servings: nil, description: nil, image: nil, imageType: nil, images: nil, brand: nil)
-    }()
+    lazy var foodItem : GroceryItem? = nil
+    @StateObject var nutritionManager = DataManager.data_manager
     
     init(foodItem: GroceryItem) {
         super.init(nibName: nil, bundle: nil)
@@ -28,9 +27,7 @@ class GroceryItemViewController : UIViewController{
         
         view.overrideUserInterfaceStyle = .dark
         
-        print("FOOD: \(self.foodItem)")
-        
-        let vc = UIHostingController(rootView: GroceryItemView(scannedFood: foodItem))
+        let vc = UIHostingController(rootView: GroceryItemView(scannedFood: foodItem!))
         let foodView = vc.view!
         foodView.translatesAutoresizingMaskIntoConstraints = false
         addChild(vc)
@@ -86,6 +83,7 @@ struct GroceryItemNutrientsView : View {
     private let foodItem : GroceryItem
     @State private var mealSelection = "Breakfast"
     private let meals =  ["Breakfast","Lunch","Dinner","Snack"]
+
     
     init(foodItem:GroceryItem) {
         self.foodItem = foodItem
