@@ -129,7 +129,7 @@ class NutritionManager : NSObject,ObservableObject{
         guard let url = URL(string: "https://api.spoonacular.com/recipes/\(recipeID)/information?apiKey=\(self.apiKey)")else{
             return
         }
-
+        
         let apiTask = URLSession.shared.dataTask(with: url) { data, resp, err in
             guard let data = data, err == nil else{
                 return completion(.failure(APIResponseError.FailedToGetData))
@@ -229,7 +229,7 @@ class NutritionManager : NSObject,ObservableObject{
     }
     
     func searchPureIngredientID(with query : String, offset: Int, completion: @escaping (Result<IngredientSearch,Error>)->Void){
-       guard let url = URL(string: "https://api.spoonacular.com/food/ingredients/search?apiKey=\(self.apiKey)&query=\(query)&number=50&offset=\(offset)") else{
+        guard let url = URL(string: "https://api.spoonacular.com/food/ingredients/search?apiKey=\(self.apiKey)&query=\(query)&number=50&offset=\(offset)") else{
             return
         }
         
@@ -354,60 +354,54 @@ class NutritionManager : NSObject,ObservableObject{
     }
     
     func addMacros(meal: any Food){
-        if let meal = meal as? GroceryItem{
-            guard let proteinNutrient = meal.nutrition?.nutrients.filter({$0.name == "Protein"}).first else{
-                return
-            }
-            guard let carbNutrient = meal.nutrition?.nutrients.filter({$0.name == "Carbohydrates"}).first else{
-                return
-            }
-            guard let fatNutrient = meal.nutrition?.nutrients.filter({$0.name == "Fat"}).first else{
-                return
-            }
-            
-            let calorie = meal.nutrition?.calories
-            
-            self.addProteinMacro(intake: proteinNutrient.amount)
-            self.addCarbMacro(intake: carbNutrient.amount)
-            self.addFatMacro(intake: fatNutrient.amount)
-            self.addCalories(intake: calorie ?? 0.0)
-            
-        }else if let meal = meal as? Recipe{
-            NutritionManager.nutritionManager.getRecipeNutritionalInfo(with: String(meal.id)) { res in
-                switch res{
-                case .success(let info):
-                    guard let proteinNutrient = info.nutrients?.filter({$0.name == "Protein"}).first else{
-                        return
-                    }
-                    guard let carbNutrient = info.nutrients?.filter({$0.name == "Carbohydrates"}).first else{
-                        return
-                    }
-                    guard let fatNutrient = info.nutrients?.filter({$0.name == "Fat"}).first else{
-                        return
-                    }
-                    
-                    guard let calorieNutrient = info.nutrients?.filter({$0.name == "Calories"}).first else{
-                        return
-                    }
-                    
-                    self.addProteinMacro(intake: proteinNutrient.amount)
-                    self.addCarbMacro(intake: carbNutrient.amount)
-                    self.addFatMacro(intake: fatNutrient.amount)
-                    self.addCalories(intake: calorieNutrient.amount)
-                    break
-                case .failure(let error):
-                    print("ADDING MACRO ERROR: \(error)")
+            if let meal = meal as? GroceryItem{
+                guard let proteinNutrient = meal.nutrition?.nutrients.filter({$0.name == "Protein"}).first else{
+                    return
                 }
+                guard let carbNutrient = meal.nutrition?.nutrients.filter({$0.name == "Carbohydrates"}).first else{
+                    return
+                }
+                guard let fatNutrient = meal.nutrition?.nutrients.filter({$0.name == "Fat"}).first else{
+                    return
+                }
+                
+                let calorie = meal.nutrition?.calories
+                
+                self.addProteinMacro(intake: proteinNutrient.amount)
+                self.addCarbMacro(intake: carbNutrient.amount)
+                self.addFatMacro(intake: fatNutrient.amount)
+                self.addCalories(intake: calorie ?? 0.0)
+                
+                print("Grocery Protein : \(proteinNutrient.amount), Grocery Carbs : \(carbNutrient.amount), Grocery Fat : \(fatNutrient.amount), Grocery Calories : \(calorie)")
+                
+            }else if let meal = meal as? Recipe{
+                guard let proteinNutrient = meal.nutritionalInfo?.nutrients?.filter({$0.name == "Protein"}).first else{
+                    return
+                }
+                guard let carbNutrient = meal.nutritionalInfo?.nutrients?.filter({$0.name == "Carbohydrates"}).first else{
+                    return
+                }
+                guard let fatNutrient = meal.nutritionalInfo?.nutrients?.filter({$0.name == "Fat"}).first else{
+                    return
+                }
+                
+                let calorie = Double(meal.nutritionalInfo?.calories ?? "")
+                
+                print("Recipe Protein : \(proteinNutrient.amount), Recipe Carbs : \(carbNutrient.amount), Recipe Fat : \(fatNutrient.amount), Recipe Calories : \(calorie)")
+                
+                self.addProteinMacro(intake: proteinNutrient.amount)
+                self.addCarbMacro(intake: carbNutrient.amount)
+                self.addFatMacro(intake: fatNutrient.amount)
+                self.addCalories(intake: calorie ?? 0.0)
             }
         }
-    }
     
     func addMealToList(mealType: MealType,meal:any Food){
         switch mealType{
         case .Breakfast:
             self.breakfastMeals.append(meal)
             self.addMacros(meal: meal)
-//            DataManager.data_manager.saveGroceryModel(mealType: "Breakfast", meal: meal as! GroceryItem)
+            //            DataManager.data_manager.saveGroceryModel(mealType: "Breakfast", meal: meal as! GroceryItem)
             break
         case .Lunch:
             self.lunchMeals.append(meal)
@@ -424,274 +418,178 @@ class NutritionManager : NSObject,ObservableObject{
         }
     }
     
-    func addRecipeNutritionalInfo(mealType: MealType,nutritionInfo: RecipeNutritionInfo){
-        switch mealType{
-        case .Breakfast:
-            self.breakfastRecipeNutritionInfo.append(nutritionInfo)
-            break
-        case .Lunch:
-            self.lunchRecipeNutritionInfo.append(nutritionInfo)
-            break
-        case .Dinner:
-            self.dinnerRecipeNutritionInfo.append(nutritionInfo)
-            break
-        case .Snack:
-            self.snacksRecipeNutritionInfo.append(nutritionInfo)
-            break
-        }
-    }
-    
     func getMealMacros(mealType : MealType,macroType : MacroType,completion: @escaping (Double)->Void){
-        switch mealType{
-        case .Breakfast:
-            switch macroType{
-            case .Protein:
-                let totalSum = self.breakfastMeals.reduce(0) { (partialResult, item) in
-                    var sum = partialResult
-                    if let item = item as? GroceryItem{
-                        sum = partialResult + ((item.nutrition?.nutrients.filter({$0.name == "Protein"}).first)?.amount ?? 0.0)
-                    }else if let meal = item as? Recipe{
-                        
+            switch mealType{
+            case .Breakfast:
+                switch macroType{
+                case .Protein:
+                    let totalSum = self.breakfastMeals.reduce(0) { (partialResult, item) in
+                        var sum = partialResult
+                        if let item = item as? GroceryItem{
+                            sum = partialResult + ((item.nutrition?.nutrients.filter({$0.name == "Protein"}).first)?.amount ?? 0.0)
+                        }else if let meal = item as? Recipe{
+                            sum = partialResult + ((meal.nutritionalInfo?.nutrients?.filter({$0.name == "Protein"}).first)?.amount ?? 0.0)
+                        }
+                        return sum
                     }
-                    return sum
-                }
-                
-                let recipeSum = self.breakfastRecipeNutritionInfo.reduce(0) { (partialResult, item) in
-                    var sum = partialResult
-                    sum = sum + ((item.nutrients?.filter({$0.name == "Protein"}).first)?.amount ?? 0.0)
                     
-                    return sum
-                }
-                
-                completion(totalSum + recipeSum)
-            case .Carbs:
-                let totalSum = self.breakfastMeals.reduce(0) { (partialResult, item) in
-                    var sum = partialResult
-                    if let item = item as? GroceryItem{
-                        sum = partialResult + ((item.nutrition?.nutrients.filter({$0.name == "Carbohydrates"}).first)?.amount ?? 0.0)
-                    }else if let item = item as? Recipe{
-                       
+                    completion(totalSum)
+                case .Carbs:
+                    let totalSum = self.breakfastMeals.reduce(0) { (partialResult, item) in
+                        var sum = partialResult
+                        if let item = item as? GroceryItem{
+                            sum = partialResult + ((item.nutrition?.nutrients.filter({$0.name == "Carbohydrates"}).first)?.amount ?? 0.0)
+                        }else if let item = item as? Recipe{
+                            sum = partialResult + ((item.nutritionalInfo?.nutrients?.filter({$0.name == "Carbohydrates"}).first)?.amount ?? 0.0)
+                        }
+                        return sum
                     }
-                    return sum
-                }
-                
-                let recipeSum = self.breakfastRecipeNutritionInfo.reduce(0) { (partialResult, item) in
-                    var sum = partialResult
-                    sum = sum + ((item.nutrients?.filter({$0.name == "Carbohydrates"}).first)?.amount ?? 0.0)
                     
-                    return sum
-                }
-                
-                completion(totalSum + recipeSum)
-            case .Fat:
-                let totalSum = self.breakfastMeals.reduce(0) { (partialResult, item) in
-                    var sum = partialResult
-                    if let item = item as? GroceryItem{
-                        sum = partialResult + ((item.nutrition?.nutrients.filter({$0.name == "Fat"}).first)?.amount ?? 0.0)
-                    }else if let item = item as? Recipe{
-                        
+                    completion(totalSum)
+                case .Fat:
+                    let totalSum = self.breakfastMeals.reduce(0) { (partialResult, item) in
+                        var sum = partialResult
+                        if let item = item as? GroceryItem{
+                            sum = partialResult + ((item.nutrition?.nutrients.filter({$0.name == "Fat"}).first)?.amount ?? 0.0)
+                        }else if let item = item as? Recipe{
+                            sum = partialResult + ((item.nutritionalInfo?.nutrients?.filter({$0.name == "Fat"}).first)?.amount ?? 0.0)
+                        }
+                        return sum
                     }
-                    return sum
-                }
-                let recipeSum = self.breakfastRecipeNutritionInfo.reduce(0) { (partialResult, item) in
-                    var sum = partialResult
-                    sum = sum + ((item.nutrients?.filter({$0.name == "Fat"}).first)?.amount ?? 0.0)
                     
-                    return sum
+                    completion(totalSum)
                 }
-                
-                completion(totalSum + recipeSum)
-            }
-        case .Lunch:
-            switch macroType{
-            case .Protein:
-                let totalSum = self.lunchMeals.reduce(0) { (partialResult, item) in
-                    var sum = partialResult
-                    if let item = item as? GroceryItem{
-                        sum = partialResult + ((item.nutrition?.nutrients.filter({$0.name == "Protein"}).first)?.amount ?? 0.0)
-                    }else if let item = item as? Recipe{
-                    
+            case .Lunch:
+                switch macroType{
+                case .Protein:
+                    let totalSum = self.lunchMeals.reduce(0) { (partialResult, item) in
+                        var sum = partialResult
+                        if let item = item as? GroceryItem{
+                            sum = partialResult + ((item.nutrition?.nutrients.filter({$0.name == "Protein"}).first)?.amount ?? 0.0)
+                        }else if let item = item as? Recipe{
+                            sum = partialResult + ((item.nutritionalInfo?.nutrients?.filter({$0.name == "Protein"}).first)?.amount ?? 0.0)
+                        }
+                        return sum
                     }
-                    return sum
-                }
-                let recipeSum = self.lunchRecipeNutritionInfo.reduce(0) { (partialResult, item) in
-                    var sum = partialResult
-                    sum = sum + ((item.nutrients?.filter({$0.name == "Protein"}).first)?.amount ?? 0.0)
-                    
-                    return sum
-                }
-                
-                completion(totalSum + recipeSum)
-            case .Carbs:
-                let totalSum = self.lunchMeals.reduce(0) { (partialResult, item) in
-                    var sum = partialResult
-                    if let item = item as? GroceryItem{
-                        sum = partialResult + ((item.nutrition?.nutrients.filter({$0.name == "Carbohydrates"}).first)?.amount ?? 0.0)
-                    }else if let item = item as? Recipe{
-                        
+                    completion(totalSum)
+                case .Carbs:
+                    let totalSum = self.lunchMeals.reduce(0) { (partialResult, item) in
+                        var sum = partialResult
+                        if let item = item as? GroceryItem{
+                            sum = partialResult + ((item.nutrition?.nutrients.filter({$0.name == "Carbohydrates"}).first)?.amount ?? 0.0)
+                        }else if let item = item as? Recipe{
+                            sum = partialResult + ((item.nutritionalInfo?.nutrients?.filter({$0.name == "Carbohydrates"}).first)?.amount ?? 0.0)
+                        }
+                        return sum
                     }
-                    return sum
-                }
-                let recipeSum = self.lunchRecipeNutritionInfo.reduce(0) { (partialResult, item) in
-                    var sum = partialResult
-                    sum = sum + ((item.nutrients?.filter({$0.name == "Carbohydrates"}).first)?.amount ?? 0.0)
                     
-                    return sum
-                }
-                
-                completion(totalSum + recipeSum)
-            case .Fat:
-                let totalSum = self.lunchMeals.reduce(0) { (partialResult, item) in
-                    var sum = partialResult
-                    if let item = item as? GroceryItem{
-                        sum = partialResult + ((item.nutrition?.nutrients.filter({$0.name == "Fat"}).first)?.amount ?? 0.0)
-                    }else if let item = item as? Recipe{
-                
+                    completion(totalSum)
+                case .Fat:
+                    let totalSum = self.lunchMeals.reduce(0) { (partialResult, item) in
+                        var sum = partialResult
+                        if let item = item as? GroceryItem{
+                            sum = partialResult + ((item.nutrition?.nutrients.filter({$0.name == "Fat"}).first)?.amount ?? 0.0)
+                        }else if let item = item as? Recipe{
+                            sum = partialResult + ((item.nutritionalInfo?.nutrients?.filter({$0.name == "Fat"}).first)?.amount ?? 0.0)
+                        }
+                        return sum
                     }
-                    return sum
-                }
-                let recipeSum = self.lunchRecipeNutritionInfo.reduce(0) { (partialResult, item) in
-                    var sum = partialResult
-                    sum = sum + ((item.nutrients?.filter({$0.name == "Fat"}).first)?.amount ?? 0.0)
                     
-                    return sum
+                    completion(totalSum)
                 }
-                
-                completion(totalSum + recipeSum)
-            }
-        case .Dinner:
-            switch macroType{
-            case .Protein:
-                let totalSum = self.dinnerMeals.reduce(0) { (partialResult, item) in
-                    var sum = partialResult
-                    if let item = item as? GroceryItem{
-                        sum = partialResult + ((item.nutrition?.nutrients.filter({$0.name == "Protein"}).first)?.amount ?? 0.0)
-                    }else if let item = item as? Recipe{
-//                        sum = partialResult + ((item.nutrients?.filter({$0.name == "Protein"}).first)?.amount ?? 0.0)
+            case .Dinner:
+                switch macroType{
+                case .Protein:
+                    let totalSum = self.dinnerMeals.reduce(0) { (partialResult, item) in
+                        var sum = partialResult
+                        if let item = item as? GroceryItem{
+                            sum = partialResult + ((item.nutrition?.nutrients.filter({$0.name == "Protein"}).first)?.amount ?? 0.0)
+                        }else if let item = item as? Recipe{
+                            sum = partialResult + ((item.nutritionalInfo?.nutrients?.filter({$0.name == "Protein"}).first)?.amount ?? 0.0)
+                        }
+                        return sum
                     }
-                    return sum
-                }
-                let recipeSum = self.dinnerRecipeNutritionInfo.reduce(0) { (partialResult, item) in
-                    var sum = partialResult
-                    sum = sum + ((item.nutrients?.filter({$0.name == "Protein"}).first)?.amount ?? 0.0)
-                    
-                    return sum
-                }
-                
-                completion(totalSum + recipeSum)
-            case .Carbs:
-                let totalSum = self.dinnerMeals.reduce(0) { (partialResult, item) in
-                    var sum = partialResult
-                    if let item = item as? GroceryItem{
-                        sum = partialResult + ((item.nutrition?.nutrients.filter({$0.name == "Carbohydrates"}).first)?.amount ?? 0.0)
-                    }else if let item = item as? Recipe{
-                        
+                    completion(totalSum)
+                case .Carbs:
+                    let totalSum = self.dinnerMeals.reduce(0) { (partialResult, item) in
+                        var sum = partialResult
+                        if let item = item as? GroceryItem{
+                            sum = partialResult + ((item.nutrition?.nutrients.filter({$0.name == "Carbohydrates"}).first)?.amount ?? 0.0)
+                        }else if let item = item as? Recipe{
+                            sum = partialResult + ((item.nutritionalInfo?.nutrients?.filter({$0.name == "Carbohydrates"}).first)?.amount ?? 0.0)
+                        }
+                        return sum
                     }
-                    return sum
-                }
-                let recipeSum = self.dinnerRecipeNutritionInfo.reduce(0) { (partialResult, item) in
-                    var sum = partialResult
-                    sum = sum + ((item.nutrients?.filter({$0.name == "Carbohydrates"}).first)?.amount ?? 0.0)
-                    
-                    return sum
-                }
-                
-                completion(totalSum + recipeSum)
-            case .Fat:
-                let totalSum = self.dinnerMeals.reduce(0) { (partialResult, item) in
-                    var sum = partialResult
-                    if let item = item as? GroceryItem{
-                        sum = partialResult + ((item.nutrition?.nutrients.filter({$0.name == "Fat"}).first)?.amount ?? 0.0)
-                    }else if let item = item as? Recipe{
-                        
+                    completion(totalSum)
+                case .Fat:
+                    let totalSum = self.dinnerMeals.reduce(0) { (partialResult, item) in
+                        var sum = partialResult
+                        if let item = item as? GroceryItem{
+                            sum = partialResult + ((item.nutrition?.nutrients.filter({$0.name == "Fat"}).first)?.amount ?? 0.0)
+                        }else if let item = item as? Recipe{
+                            sum = partialResult + ((item.nutritionalInfo?.nutrients?.filter({$0.name == "Fat"}).first)?.amount ?? 0.0)
+                        }
+                        return sum
                     }
-                    return sum
-                }
-                let recipeSum = self.dinnerRecipeNutritionInfo.reduce(0) { (partialResult, item) in
-                    var sum = partialResult
-                    sum = sum + ((item.nutrients?.filter({$0.name == "Fat"}).first)?.amount ?? 0.0)
                     
-                    return sum
+                    completion(totalSum)
                 }
-                
-                completion(totalSum + recipeSum)
-            }
-        case .Snack:
-            switch macroType{
-            case .Protein:
-                let totalSum = self.snacks.reduce(0) { (partialResult, item) in
-                    var sum = partialResult
-                    if let item = item as? GroceryItem{
-                        sum = partialResult + ((item.nutrition?.nutrients.filter({$0.name == "Protein"}).first)?.amount ?? 0.0)
-                    }else if let item = item as? Recipe{
-                        
+            case .Snack:
+                switch macroType{
+                case .Protein:
+                    let totalSum = self.snacks.reduce(0) { (partialResult, item) in
+                        var sum = partialResult
+                        if let item = item as? GroceryItem{
+                            sum = partialResult + ((item.nutrition?.nutrients.filter({$0.name == "Protein"}).first)?.amount ?? 0.0)
+                        }else if let item = item as? Recipe{
+                            sum = partialResult + ((item.nutritionalInfo?.nutrients?.filter({$0.name == "Protein"}).first)?.amount ?? 0.0)
+                        }
+                        return sum
                     }
-                    return sum
-                }
-                let recipeSum = self.snacksRecipeNutritionInfo.reduce(0) { (partialResult, item) in
-                    var sum = partialResult
-                    sum = sum + ((item.nutrients?.filter({$0.name == "Protein"}).first)?.amount ?? 0.0)
                     
-                    return sum
-                }
-                
-                completion(totalSum + recipeSum)
-            case .Carbs:
-                let totalSum = self.snacks.reduce(0) { (partialResult, item) in
-                    var sum = partialResult
-                    if let item = item as? GroceryItem{
-                        sum = partialResult + ((item.nutrition?.nutrients.filter({$0.name == "Carbohydrates"}).first)?.amount ?? 0.0)
-                    }else if let item = item as? Recipe{
-                        
+                    completion(totalSum)
+                case .Carbs:
+                    let totalSum = self.snacks.reduce(0) { (partialResult, item) in
+                        var sum = partialResult
+                        if let item = item as? GroceryItem{
+                            sum = partialResult + ((item.nutrition?.nutrients.filter({$0.name == "Carbohydrates"}).first)?.amount ?? 0.0)
+                        }else if let item = item as? Recipe{
+                            sum = partialResult + ((item.nutritionalInfo?.nutrients?.filter({$0.name == "Carbohydrates"}).first)?.amount ?? 0.0)
+                        }
+                        return sum
                     }
-                    return sum
-                }
-                let recipeSum = self.snacksRecipeNutritionInfo.reduce(0) { (partialResult, item) in
-                    var sum = partialResult
-                    sum = sum + ((item.nutrients?.filter({$0.name == "Carbohydrates"}).first)?.amount ?? 0.0)
-                    
-                    return sum
-                }
-                
-                completion(totalSum + recipeSum)
-            case .Fat:
-                let totalSum = self.snacks.reduce(0) { (partialResult, item) in
-                    var sum = partialResult
-                    if let item = item as? GroceryItem{
-                        sum = partialResult + ((item.nutrition?.nutrients.filter({$0.name == "Fat"}).first)?.amount ?? 0.0)
-                    }else if let item = item as? Recipe{
-                        
+                    completion(totalSum)
+                case .Fat:
+                    let totalSum = self.snacks.reduce(0) { (partialResult, item) in
+                        var sum = partialResult
+                        if let item = item as? GroceryItem{
+                            sum = partialResult + ((item.nutrition?.nutrients.filter({$0.name == "Fat"}).first)?.amount ?? 0.0)
+                        }else if let item = item as? Recipe{
+                            sum = partialResult + ((item.nutritionalInfo?.nutrients?.filter({$0.name == "Fat"}).first)?.amount ?? 0.0)
+                        }
+                        return sum
                     }
-                    return sum
+                    completion(totalSum)
                 }
-                let recipeSum = self.snacksRecipeNutritionInfo.reduce(0) { (partialResult, item) in
-                    var sum = partialResult
-                    sum = sum + ((item.nutrients?.filter({$0.name == "Fat"}).first)?.amount ?? 0.0)
-                    
-                    return sum
-                }
-                
-                completion(totalSum + recipeSum)
             }
         }
-    }
     
     func getRemainingCalories() -> Double{
         return self.caloricalDailyLimit - self.dailyCaloricalIntake
     }
-    
+   
     func getRemainingProtein() -> Double{
         return self.proteinDailyIntakeLimit - self.dailyProteinIntake
     }
-    
+
     func getRemainingCarb() -> Double{
         return self.carbsDailyIntakeLimit - self.dailyCarbIntake
     }
-    
+
     func getRemainingFat() -> Double{
         return self.fatDailyIntakeLimit - self.dailyFatIntake
     }
-    
+
     func encodeMeal(foodItem : any Food,completion: @escaping(String)->Void){
         if let item = foodItem as? GroceryItem{
             do{
@@ -715,11 +613,11 @@ class NutritionManager : NSObject,ObservableObject{
             }
         }
     }
-    
-     func initializeMeal(mealType : MealType,meals:[any Food]){
+
+    func initializeMeal(mealType : MealType,meals:[any Food]){
         switch mealType{
         case .Breakfast:
-            self.breakfastMeals = self.breakfastMeals + meals
+            self.breakfastMeals = meals
             break
         case .Lunch:
             self.lunchMeals = meals
@@ -730,6 +628,14 @@ class NutritionManager : NSObject,ObservableObject{
         case .Snack:
             self.snacks = meals
             break
+        }
+
+        NutritionManager.nutritionManager.addMacrosFromList(meal: meals)
+    }
+
+    func addMacrosFromList(meal : [any Food]){
+        for item in meal{
+            addMacros(meal: item)
         }
     }
 }
