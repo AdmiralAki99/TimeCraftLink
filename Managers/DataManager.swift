@@ -192,6 +192,48 @@ class DataManager : ObservableObject{
             fatalError("Not able to save ModelContext")
         }
     }
+    
+    func removeMeal(meal: GroceryItem){
+        guard let modelContext = self.swiftDataModelContext else{
+            return
+        }
+        guard let model = self.mealList.filter({$0.meal.id == meal.id}).first else{
+            return
+        }
+        
+        if let index = self.mealList.firstIndex(where: {$0.meal.id == meal.id}){
+            self.mealList.remove(at: index)
+        }
+        
+        do{
+            modelContext.delete(model)
+            saveModelContext()
+        }catch{
+            print("Error: \(error.localizedDescription)")
+            fatalError("Not able to delete Model")
+        }
+    }
+    
+    func removeMeal(meal:Recipe){
+        guard let modelContext = self.swiftDataModelContext else{
+            return
+        }
+        guard let model = self.recipeList.filter({$0.meal.id == meal.id}).first else{
+            return
+        }
+        
+        if let index = self.recipeList.firstIndex(where: {$0.meal.id == meal.id}){
+            self.recipeList.remove(at: index)
+        }
+        
+        do{
+            modelContext.delete(model)
+            saveModelContext()
+        }catch{
+            print("Error: \(error.localizedDescription)")
+            fatalError("Not able to delete Model")
+        }
+    }
         
         
 }

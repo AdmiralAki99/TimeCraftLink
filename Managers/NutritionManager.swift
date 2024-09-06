@@ -26,10 +26,10 @@ class NutritionManager : NSObject,ObservableObject{
     
     private let dailyFoodItems : [GroceryItem] = []
     // TODO: FIX THE BLOODY TYPOS
-    private var dailyProteinIntake : Double = 0.0
-    private var dailyCarbIntake : Double = 0.0
-    private var dailyFatIntake : Double = 0.0
-    private var dailyCaloricalIntake : Double = 0.0
+    @Published private var dailyProteinIntake : Double = 0.0
+    @Published private var dailyCarbIntake : Double = 0.0
+    @Published private var dailyFatIntake : Double = 0.0
+    @Published private var dailyCaloricalIntake : Double = 0.0
     
     @Published private var breakfastMeals : [any Food] = []
     @Published private var lunchMeals : [any Food] = []
@@ -312,16 +312,32 @@ class NutritionManager : NSObject,ObservableObject{
         self.dailyProteinIntake = self.dailyProteinIntake + intake
     }
     
+    func removeProteinMacro(intake : Double){
+        self.dailyProteinIntake = self.dailyProteinIntake - intake
+    }
+    
     func addCarbMacro(intake: Double){
         self.dailyCarbIntake = self.dailyCarbIntake + intake
+    }
+    
+    func removeCarbMacro(intake: Double){
+        self.dailyCarbIntake = self.dailyCarbIntake - intake
     }
     
     func addFatMacro(intake: Double){
         self.dailyFatIntake = self.dailyFatIntake + intake
     }
     
+    func removeFatMacro(intake: Double){
+        self.dailyFatIntake = self.dailyFatIntake - intake
+    }
+    
     func addCalories(intake: Double){
         self.dailyCaloricalIntake = self.dailyCaloricalIntake + intake
+    }
+    
+    func removeCalories(intake: Double){
+        self.dailyCaloricalIntake = self.dailyCaloricalIntake - intake
     }
     
     func getDailyCaloricalIntake() -> Double{
@@ -395,6 +411,46 @@ class NutritionManager : NSObject,ObservableObject{
                 self.addCalories(intake: calorie ?? 0.0)
             }
         }
+    
+    func removeMacros(meal: GroceryItem){
+        guard let proteinNutrient = meal.nutrition?.nutrients.filter({$0.name == "Protein"}).first else{
+            return
+        }
+        guard let carbNutrient = meal.nutrition?.nutrients.filter({$0.name == "Carbohydrates"}).first else{
+            return
+        }
+        guard let fatNutrient = meal.nutrition?.nutrients.filter({$0.name == "Fat"}).first else{
+            return
+        }
+        
+        let calorie = meal.nutrition?.calories
+        
+        self.removeProteinMacro(intake: proteinNutrient.amount)
+        self.removeCarbMacro(intake: carbNutrient.amount)
+        self.removeFatMacro(intake: fatNutrient.amount)
+        self.removeCalories(intake: calorie ?? 0.0)
+    }
+    
+    func removeMacros(meal:Recipe){
+        guard let proteinNutrient = meal.nutritionalInfo?.nutrients?.filter({$0.name == "Protein"}).first else{
+            return
+        }
+        guard let carbNutrient = meal.nutritionalInfo?.nutrients?.filter({$0.name == "Carbohydrates"}).first else{
+            return
+        }
+        guard let fatNutrient = meal.nutritionalInfo?.nutrients?.filter({$0.name == "Fat"}).first else{
+            return
+        }
+        
+        let calorie = Double(meal.nutritionalInfo?.calories ?? "")
+        
+        print("Recipe Protein : \(proteinNutrient.amount), Recipe Carbs : \(carbNutrient.amount), Recipe Fat : \(fatNutrient.amount), Recipe Calories : \(calorie)")
+        
+        self.removeProteinMacro(intake: proteinNutrient.amount)
+        self.removeCarbMacro(intake: carbNutrient.amount)
+        self.removeFatMacro(intake: fatNutrient.amount)
+        self.removeCalories(intake: calorie ?? 0.0)
+    }
     
     func addMealToList(mealType: MealType,meal:any Food){
         switch mealType{
@@ -636,6 +692,64 @@ class NutritionManager : NSObject,ObservableObject{
     func addMacrosFromList(meal : [any Food]){
         for item in meal{
             addMacros(meal: item)
+        }
+    }
+    
+    func removeMeal(mealType : MealType, meal : GroceryItem){
+        switch mealType{
+        case .Breakfast:
+            if let index = self.breakfastMeals.firstIndex(where: {$0.id == meal.id}){
+                self.breakfastMeals.remove(at: index)
+            }
+            self.removeMacros(meal: meal)
+            break
+        case .Lunch:
+            if let index = self.lunchMeals.firstIndex(where: {$0.id == meal.id}){
+                self.lunchMeals.remove(at: index)
+            }
+            self.removeMacros(meal: meal)
+            break
+        case .Dinner:
+            if let index = self.dinnerMeals.firstIndex(where: {$0.id == meal.id}){
+                self.dinnerMeals.remove(at: index)
+            }
+            self.removeMacros(meal: meal)
+            break
+        case .Snack:
+            if let index = self.snacks.firstIndex(where: {$0.id == meal.id}){
+                self.snacks.remove(at: index)
+            }
+            self.removeMacros(meal: meal)
+            break
+        }
+    }
+    
+    func removeMeal(mealType : MealType, meal : Recipe){
+        switch mealType{
+        case .Breakfast:
+            if let index = self.breakfastMeals.firstIndex(where: {$0.id == meal.id}){
+                self.breakfastMeals.remove(at: index)
+            }
+            self.removeMacros(meal: meal)
+            break
+        case .Lunch:
+            if let index = self.lunchMeals.firstIndex(where: {$0.id == meal.id}){
+                self.lunchMeals.remove(at: index)
+            }
+            self.removeMacros(meal: meal)
+            break
+        case .Dinner:
+            if let index = self.dinnerMeals.firstIndex(where: {$0.id == meal.id}){
+                self.dinnerMeals.remove(at: index)
+            }
+            self.removeMacros(meal: meal)
+            break
+        case .Snack:
+            if let index = self.snacks.firstIndex(where: {$0.id == meal.id}){
+                self.snacks.remove(at: index)
+            }
+            self.removeMacros(meal: meal)
+            break
         }
     }
 }

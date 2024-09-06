@@ -45,7 +45,7 @@ struct CameraScanner : View {
     
     @State private var modelCount : Int = 0
     
-    private var macroColors: [Color] = [Color.pink,Color.cyan,Color.green]
+    @State private var macroColors: [Color] = [Color.pink,Color.cyan,Color.green]
     
     init(navigationController: UINavigationController? = nil) {
         self.navigationController = navigationController
@@ -63,7 +63,7 @@ struct CameraScanner : View {
                         NutritionChartCard()
                     }.padding(EdgeInsets(top: 10, leading: 0, bottom: 10, trailing: 0))
                     HStack{
-                        NutrientMacroTracker(macroColors: self.macroColors)
+                        NutrientMacroTracker(macroColors: self.macroColors).padding(EdgeInsets(top: 5, leading: 10, bottom: 5, trailing: 10)).background(Color.gray.opacity(0.2)).cornerRadius(15)
                     }.padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10))
                     VStack{
                         List{
@@ -73,9 +73,28 @@ struct CameraScanner : View {
                                 }
                                 ForEach(self.breakfastMeals,id: \.id) { item in
                                     if let item = item as? GroceryItem{
-                                        GroceryItemCell(scannedFood: item, navigationController: navigationController!)
+                                        GroceryItemCell(scannedFood: item, navigationController: navigationController!).swipeActions(allowsFullSwipe: false) {
+                                            Button(role: .destructive) {
+                                                print("Deleting Food \(item.id)")
+                                                NutritionManager.nutritionManager.removeMeal(mealType: .Breakfast, meal: item)
+                                                nutritionManager.removeMeal(meal: item)
+                                                self.breakfastMeals = NutritionManager.nutritionManager.getMeals(mealType: .Breakfast)
+                                            } label: {
+                                                Label("Delete", systemImage: "trash.fill")
+                                            }
+
+                                        }
                                     }else if let item = item as? Recipe{
-                                        RecipeItemCell(recipeItem: item, navigationController: navigationController!)
+                                        RecipeItemCell(recipeItem: item, navigationController: navigationController!).swipeActions(allowsFullSwipe: false) {
+                                            Button(role: .destructive) {
+                                                NutritionManager.nutritionManager.removeMeal(mealType: .Breakfast, meal: item)
+                                                nutritionManager.removeMeal(meal: item)
+                                                self.breakfastMeals = NutritionManager.nutritionManager.getMeals(mealType: .Breakfast)
+                                            } label: {
+                                                Label("Delete", systemImage: "trash.fill")
+                                            }
+
+                                        }
                                     }
                                 }
                                 
@@ -104,9 +123,28 @@ struct CameraScanner : View {
                                 }
                                 ForEach(self.lunchMeals,id: \.id) { item in
                                     if let item = item as? GroceryItem{
-                                        GroceryItemCell(scannedFood: item, navigationController: navigationController!)
+                                        GroceryItemCell(scannedFood: item, navigationController: navigationController!).swipeActions(allowsFullSwipe: false) {
+                                            Button(role: .destructive) {
+                                                print("Deleting Food \(item.id)")
+                                                NutritionManager.nutritionManager.removeMeal(mealType: .Lunch, meal: item)
+                                                nutritionManager.removeMeal(meal: item)
+                                                self.lunchMeals = NutritionManager.nutritionManager.getMeals(mealType: .Lunch)
+                                            } label: {
+                                                Label("Delete", systemImage: "trash.fill")
+                                            }
+
+                                        }
                                     }else if let item = item as? Recipe{
-                                        RecipeItemCell(recipeItem: item, navigationController: navigationController!)
+                                        RecipeItemCell(recipeItem: item, navigationController: navigationController!).swipeActions(allowsFullSwipe: false) {
+                                            Button(role: .destructive) {
+                                                NutritionManager.nutritionManager.removeMeal(mealType: .Lunch, meal: item)
+                                                nutritionManager.removeMeal(meal: item)
+                                                self.lunchMeals = NutritionManager.nutritionManager.getMeals(mealType: .Lunch)
+                                            } label: {
+                                                Label("Delete", systemImage: "trash.fill")
+                                            }
+
+                                        }
                                     }
                                 }
                                 HStack(alignment:.center){
@@ -134,9 +172,28 @@ struct CameraScanner : View {
                                 }
                                 ForEach(self.dinnerMeals,id: \.id) { item in
                                     if let item = item as? GroceryItem{
-                                        GroceryItemCell(scannedFood: item, navigationController: navigationController!)
+                                        GroceryItemCell(scannedFood: item, navigationController: navigationController!).swipeActions(allowsFullSwipe: false) {
+                                            Button(role: .destructive) {
+                                                print("Deleting Food \(item.id)")
+                                                NutritionManager.nutritionManager.removeMeal(mealType: .Dinner, meal: item)
+                                                nutritionManager.removeMeal(meal: item)
+                                                self.dinnerMeals = NutritionManager.nutritionManager.getMeals(mealType: .Dinner)
+                                            } label: {
+                                                Label("Delete", systemImage: "trash.fill")
+                                            }
+
+                                        }
                                     }else if let item = item as? Recipe{
-                                        RecipeItemCell(recipeItem: item, navigationController: navigationController!)
+                                        RecipeItemCell(recipeItem: item, navigationController: navigationController!).swipeActions(allowsFullSwipe: false) {
+                                            Button(role: .destructive) {
+                                                NutritionManager.nutritionManager.removeMeal(mealType: .Dinner, meal: item)
+                                                nutritionManager.removeMeal(meal: item)
+                                                self.dinnerMeals = NutritionManager.nutritionManager.getMeals(mealType: .Dinner)
+                                            } label: {
+                                                Label("Delete", systemImage: "trash.fill")
+                                            }
+
+                                        }
                                     }
                                 }
                                 HStack(alignment:.center){
@@ -164,9 +221,28 @@ struct CameraScanner : View {
                                 }
                                 ForEach(self.snackMeals,id: \.id) { item in
                                     if let item = item as? GroceryItem{
-                                        GroceryItemCell(scannedFood: item, navigationController: navigationController!)
+                                        GroceryItemCell(scannedFood: item, navigationController: navigationController!).swipeActions(allowsFullSwipe: false) {
+                                            Button(role: .destructive) {
+                                                print("Deleting Food \(item.id)")
+                                                NutritionManager.nutritionManager.removeMeal(mealType: .Snack, meal: item)
+                                                nutritionManager.removeMeal(meal: item)
+                                                self.snackMeals = NutritionManager.nutritionManager.getMeals(mealType: .Snack)
+                                            } label: {
+                                                Label("Delete", systemImage: "trash.fill")
+                                            }
+
+                                        }
                                     }else if let item = item as? Recipe{
-                                        RecipeItemCell(recipeItem: item, navigationController: navigationController!)
+                                        RecipeItemCell(recipeItem: item, navigationController: navigationController!).swipeActions(allowsFullSwipe: false) {
+                                            Button(role: .destructive) {
+                                                NutritionManager.nutritionManager.removeMeal(mealType: .Snack, meal: item)
+                                                nutritionManager.removeMeal(meal: item)
+                                                self.snackMeals = NutritionManager.nutritionManager.getMeals(mealType: .Snack)
+                                            } label: {
+                                                Label("Delete", systemImage: "trash.fill")
+                                            }
+
+                                        }
                                     }
                                 }
                                 HStack(alignment:.center){

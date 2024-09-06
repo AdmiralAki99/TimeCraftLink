@@ -11,7 +11,7 @@ import Charts
 
 struct NutrientMacroTracker : View {
     
-    private var macroColors : [Color]
+    @State private var macroColors : [Color]
     @State private var proteinIntake : Double = NutritionManager.nutritionManager.getDailyProteinIntake()
     @State private var carbIntake : Double = NutritionManager.nutritionManager.getDailyCarbIntake()
     @State private var fatIntake : Double = NutritionManager.nutritionManager.getDailyFatIntake()
@@ -40,7 +40,7 @@ struct NutrientMacroTracker : View {
                 }.gaugeStyle(.accessoryLinearCapacity).tint(self.macroColors[2])
                 Text("\(Int(self.fatIntake))/\(Int(NutritionManager.nutritionManager.getDailyFatTarget()))").font(.caption2).frame(alignment: .trailing)
             }.frame(height: 60).padding(EdgeInsets(top: 0, leading: 10, bottom: 0, trailing: 10))
-        }.padding(EdgeInsets(top: 5, leading: 10, bottom: 5, trailing: 10)).background(Color.gray.opacity(0.2)).cornerRadius(15).onAppear(){
+        }.onAppear(){
             self.proteinIntake = NutritionManager.nutritionManager.getDailyProteinIntake()
             self.carbIntake = NutritionManager.nutritionManager.getDailyCarbIntake()
             self.fatIntake = NutritionManager.nutritionManager.getDailyFatIntake()
