@@ -137,20 +137,21 @@ struct RecipeView : View {
                 VStack{
                     Text("Protein").font(.caption)
                     Gauge(value: recipeNutritionalInfo.caloricBreakdown.percentProtein ?? 0.0, in: 1...100) {
-                        
+                        Text("\(Int(recipeItem.nutritionalInfo?.nutrients?.filter({$0.name == "Protein"}).first?.amount ?? 0.0)) g").font(.caption).bold()
                     }.gaugeStyle(.accessoryCircularCapacity).tint(Color.pink)
                 }
                 Spacer()
                 VStack{
                     Text("Carbs").font(.caption)
                     Gauge(value: recipeNutritionalInfo.caloricBreakdown.percentCarbs ?? 0.0, in: 1...100) {
+                        Text("\(Int(recipeItem.nutritionalInfo?.nutrients?.filter({$0.name == "Carbohydrates"}).first?.amount ?? 0.0)) g").font(.caption).bold()
                     }.gaugeStyle(.accessoryCircularCapacity).tint(Color.cyan)
                 }
                 Spacer()
                 VStack{
                     Text("Fat").font(.caption)
                     Gauge(value: recipeNutritionalInfo.caloricBreakdown.percentFat ?? 0.0, in: 1...100) {
-                    
+                        Text("\(Int(recipeItem.nutritionalInfo?.nutrients?.filter({$0.name == "Fat"}).first?.amount ?? 0.0)) g").font(.caption).bold()
                     }.gaugeStyle(.accessoryCircularCapacity).tint(Color.green)
                 }
             }.frame(maxWidth: .infinity).padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10))
@@ -211,22 +212,18 @@ struct RecipeView : View {
                     switch mealSelection{
                     case "Breakfast":
                         NutritionManager.nutritionManager.addMealToList(mealType: .Breakfast, meal: recipeItem)
-                        NutritionManager.nutritionManager.addRecipeNutritionalInfo(mealType: .Breakfast, nutritionInfo: recipeNutritionalInfo)
                         nutritionManager.addMeal(mealType: "Breakfast", meal: recipeItem)
                         break
                     case "Lunch":
                         NutritionManager.nutritionManager.addMealToList(mealType: .Lunch, meal: recipeItem)
-                        NutritionManager.nutritionManager.addRecipeNutritionalInfo(mealType: .Lunch, nutritionInfo: recipeNutritionalInfo)
                         nutritionManager.addMeal(mealType: "Lunch", meal: recipeItem)
                         break
                     case "Dinner":
                         NutritionManager.nutritionManager.addMealToList(mealType: .Dinner, meal: recipeItem)
-                        NutritionManager.nutritionManager.addRecipeNutritionalInfo(mealType: .Dinner, nutritionInfo: recipeNutritionalInfo)
                         nutritionManager.addMeal(mealType: "Dinner", meal: recipeItem)
                         break
                     case "Snack":
                         NutritionManager.nutritionManager.addMealToList(mealType: .Snack, meal: recipeItem)
-                        NutritionManager.nutritionManager.addRecipeNutritionalInfo(mealType: .Snack, nutritionInfo: recipeNutritionalInfo)
                         nutritionManager.addMeal(mealType: "Snack", meal: recipeItem)
                         break
                     default:
