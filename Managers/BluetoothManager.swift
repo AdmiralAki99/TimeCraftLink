@@ -21,12 +21,13 @@ protocol BluetoothManagerProtocol{
     func startScanningForDevices()
 }
 
-class BluetoothManager : NSObject{
+class BluetoothManager : NSObject,ObservableObject{
     
     let SERVICE_UUID = "4FAFC201-1FB5-459E-8FCC-C5C9C331914B"
     let musicCharacteristicUUID = "BEB5483E-36E1-4688-B7F5-EA07361B26A8"
     let DateTimeCharacteristicUUID = "B9DC3D38-4B22-11EE-BE56-0242AC120002"
     let TodoListStatusCharertisticUUID = "28bd3c28-635d-11ee-8c99-0242ac120002"
+    let nutritionCharacteristicUUID = "14106c51-249e-4dc4-baa8-0966dda5c8eb"
     let musicStateCharacteristicUUID = "0x2BA3"
     var currentMusicPlaybackState : MusicPlaybackState = MusicPlaybackState.Paused
     
@@ -37,6 +38,7 @@ class BluetoothManager : NSObject{
         case todoListChar = "B9DC3D38-4B22-11EE-BE56-0242AC120002"
         case MusicMetadataChar = "37253d54-6107-11ee-8c99-0242ac120002"
         case TodoListStatusChar = "28bd3c28-635d-11ee-8c99-0242ac120002"
+        case NutritionalInfoChar = "14106c51-249e-4dc4-baa8-0966dda5c8eb"
         case Initialization = "-"
     }
     
@@ -53,12 +55,15 @@ class BluetoothManager : NSObject{
     var connectedCharacteristics : Dictionary<String,CBCharacteristic> = Dictionary<String,CBCharacteristic>()
     var isConnected = false
     
+    @Published var scannedPeripherals : Set<CBPeripheral> = []
+    
     var peripheralCharacteristics : [CBCharacteristic]!
     
 //    let smartWatchCategory = CBUUID(string: "0x003")
     
-    enum APIServices{
-        
+    override init(){
+        super.init()
+        self.beginBluetooth()
     }
     
     
@@ -67,7 +72,6 @@ class BluetoothManager : NSObject{
     }
     
     func beginBluetooth(){
-        print("Starting Bluetooth")
         centralManager = CBCentralManager(delegate: self, queue: nil)
     }
     
@@ -169,8 +173,16 @@ class BluetoothManager : NSObject{
         return selectedCharacteristic
     }
     
-    private func scanBluetoothDevices(){
+    private func scanBluetoothDevices(timeout: TimeInterval,scheduledTask: @escaping ()-> Void) {
+        let task = DispatchWorkItem(block: scheduledTask)
         
+        DispatchQueue.global().async(execute: task)
+        
+        DispatchQueue.global().asyncAfter(deadline: .now() + timeout){
+            if task.isCancelled == false{
+                task.cancel()
+            }
+        }
     }
     
     private func startAdvertising(name : String){
@@ -178,12 +190,28 @@ class BluetoothManager : NSObject{
         peripheralManager = CBPeripheralManager()
     }
     
-    private func startScanning(){
-        centralManager?.scanForPeripherals(withServices: nil)
+    func startScanning(){
+        self.centralManager?.scanForPeripherals(withServices: nil)
     }
     
-    private func disconnect(){
+    func getScannedPeripherals() -> Set<CBPeripheral>{
+        return self.scannedPeripherals
+    }
+    
+    func disconnect(){
         
+    }
+    
+    func stopScanning(){
+        self.centralManager?.stopScan()
+    }
+    
+    func clearScannedDevices(){
+        self.scannedPeripherals = []
+    }
+    
+    func getDeviceFromScannedPeripherals(index :Int)-> CBPeripheral{
+        return self.scannedPeripherals[scannedPeripherals.index(scannedPeripherals.startIndex,offsetBy: index)]
     }
 }
 
@@ -191,8 +219,7 @@ extension BluetoothManager : CBCentralManagerDelegate{
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         switch central.state{
         case .poweredOn:
-            startScanning()
-            print("Starting Scan")
+            print("Powered On")
         case .poweredOff:
             break
         case .resetting:
@@ -209,10 +236,8 @@ extension BluetoothManager : CBCentralManagerDelegate{
     }
     
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
-        if peripheral.name == "Lazarus"{
-            smartWatchPeripheral = peripheral
-            smartWatchPeripheral.delegate = self
-            centralManager?.connect(smartWatchPeripheral)
+        if peripheral.name != nil{
+            self.scannedPeripherals.insert(peripheral)
         }
     }
     
