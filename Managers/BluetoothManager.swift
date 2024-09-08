@@ -47,15 +47,15 @@ class BluetoothManager : NSObject,ObservableObject{
         case Paused
     }
     
-    var smartWatchPeripheral : CBPeripheral!
+    var smartWatchPeripheral : CBPeripheral?
     var bluetoothName : String = ""
     var peripheralManager : CBPeripheralManager? = nil
     var centralManager : CBCentralManager?
-    var connectedPeripherals : Dictionary<UUID,CBPeripheral> = Dictionary<UUID,CBPeripheral>()
+    var connectedPeripherals : CBPeripheral?
     var connectedCharacteristics : Dictionary<String,CBCharacteristic> = Dictionary<String,CBCharacteristic>()
     var isConnected = false
     
-    @Published var scannedPeripherals : Set<CBPeripheral> = []
+    @Published var scannedPeripherals : [CBPeripheral] = []
     
     var peripheralCharacteristics : [CBCharacteristic]!
     
@@ -80,7 +80,10 @@ class BluetoothManager : NSObject,ObservableObject{
         guard let selectedCharacteristic = connectedCharacteristics[characteristic.rawValue] else{
             return
         }
-        smartWatchPeripheral.writeValue(encoded_message, for: selectedCharacteristic, type: .withResponse)
+        if let smartWatchPeripheral = smartWatchPeripheral{
+            smartWatchPeripheral.writeValue(encoded_message, for: selectedCharacteristic, type: .withResponse)
+        }
+        
     }
     
     private func handleMessage(message : String, characteristic: BLECharacteristics){
@@ -157,8 +160,8 @@ class BluetoothManager : NSObject,ObservableObject{
         
     }
     
-    private func createConnection(){
-        
+    func connectToDevice(peripheral: CBPeripheral){
+        self.centralManager?.connect(peripheral,options: nil)
     }
     
     private func determineCharacteristic(uuid : String) -> BLECharacteristics{
@@ -194,8 +197,8 @@ class BluetoothManager : NSObject,ObservableObject{
         self.centralManager?.scanForPeripherals(withServices: nil)
     }
     
-    func getScannedPeripherals() -> Set<CBPeripheral>{
-        return self.scannedPeripherals
+    func getScannedPeripherals() -> [CBPeripheral]{
+        return self.scannedPeripherals.removeDuplicates()
     }
     
     func disconnect(){
@@ -208,10 +211,6 @@ class BluetoothManager : NSObject,ObservableObject{
     
     func clearScannedDevices(){
         self.scannedPeripherals = []
-    }
-    
-    func getDeviceFromScannedPeripherals(index :Int)-> CBPeripheral{
-        return self.scannedPeripherals[scannedPeripherals.index(scannedPeripherals.startIndex,offsetBy: index)]
     }
 }
 
@@ -237,7 +236,7 @@ extension BluetoothManager : CBCentralManagerDelegate{
     
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
         if peripheral.name != nil{
-            self.scannedPeripherals.insert(peripheral)
+            self.scannedPeripherals.append(peripheral)
         }
     }
     
@@ -245,6 +244,7 @@ extension BluetoothManager : CBCentralManagerDelegate{
         print("Connected to Device!")
         peripheral.discoverServices(nil)
         isConnected = true
+        self.smartWatchPeripheral = peripheral
     }
     
 }
@@ -282,6 +282,10 @@ extension BluetoothManager : CBPeripheralDelegate{
         }
         handleMessage(message: message, characteristic: determineCharacteristic(uuid: characteristic.uuid.uuidString))
     }
+    
+    func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
+        print("Failed To Connect To : \(peripheral.name ?? "")")
+    }
 }
 
 extension String {
@@ -294,6 +298,17 @@ extension String {
         let data = self.data(using: .utf8)
         let decodedString = String(data: data!, encoding: .nonLossyASCII) ?? ""
         return decodedString
+    }
+    
+    func newLineEachWord(){
+        let words = self.components(separatedBy: " ")
+    }
+}
+
+extension Sequence where Iterator.Element : Hashable{
+    func removeDuplicates() -> [Iterator.Element]{
+        var seen : Set<Iterator.Element> = []
+        return filter{seen.insert($0).inserted}
     }
 }
 

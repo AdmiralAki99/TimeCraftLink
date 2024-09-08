@@ -42,7 +42,7 @@ struct BluetoothDiscoveryView : View {
     @State private var bluetoothTriggered : Bool = false
     @State var peripherals : [CBPeripheral] = []
     
-    private var numberOfDevicesInOneRing : Int = 10
+    private var numberOfDevicesInOneRing : Int = 6
     
     @StateObject private var bluetoothManager = BluetoothManager.bluetooth_manager
     
@@ -110,7 +110,7 @@ struct BluetoothDiscoveryView : View {
                         
                     }else{
                         ForEach(0...bluetoothManager.getScannedPeripherals().count-1,id:\.self){ num in
-                            BluetoothDeviceButton(peripheral: (bluetoothManager.getDeviceFromScannedPeripherals(index: num))).position(x:self.buttonAngles[num].0,y:self.buttonAngles[num].1).animation(Animation.easeIn(duration: 1).delay(1 * Double((num+1))))
+                            BluetoothDeviceButton(peripheral: bluetoothManager.getScannedPeripherals()[num]).position(x:self.buttonAngles[num].0,y:self.buttonAngles[num].1).animation(Animation.easeIn(duration: 1).delay(1 * Double((num+1))))
                         }
                     }
                 }
@@ -133,18 +133,24 @@ struct BluetoothDeviceButton : View {
     
     init(peripheral: CBPeripheral){
         self.peripheral = peripheral
-//        print(peripheral.name ?? "")
     }
     
     var body: some View {
         Button {
-            
+            BluetoothManager.bluetooth_manager.connectToDevice(peripheral: peripheral)
         } label: {
             VStack{
-                Image(systemName: "iphone.circle").font(.system(size: 25)).foregroundColor(.white).shadow(radius: 25)
-//                Text(String(self.peripheral.name ?? "")).font(.caption2).truncationMode(.tail).lineLimit(1)
+                
+                if let name = self.peripheral.name{
+                    if name == "R.I.O"{
+                        Image(systemName: "applewatch").font(.system(size: 25)).foregroundColor(.white).shadow(radius: 25)
+                    }else{
+                        Image(systemName: "iphone.circle").font(.system(size: 25)).foregroundColor(.white).shadow(radius: 25)
+                    }
+                }
+                Text(String(self.peripheral.name ?? "")).font(.caption2).truncationMode(.tail).lineLimit(2,reservesSpace: true).foregroundColor(.white).bold()
             }
-        }.clipShape(Circle())
+        }/*.clipShape(Circle())*/
         
     }
 }
