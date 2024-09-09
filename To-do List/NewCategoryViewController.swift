@@ -14,7 +14,7 @@ class NewCategoryViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        view.backgroundColor = UIColor(red: 0.21, green: 0.32, blue: 0.61, alpha: 1.00)
+        overrideUserInterfaceStyle = .dark
 
         // Do any additional setup after loading the view.
     }
