@@ -309,7 +309,7 @@ class ToDoListViewController: UIViewController{
 
 struct ToDoListView: View {
     
-    @StateObject var todoListManager = ToDoListManager.toDoList_manager
+    @StateObject private var todoListManager = ToDoListManager.toDoList_manager
     private var navigationController : UINavigationController?
     
     init(navigationController : UINavigationController? = nil){
@@ -319,19 +319,23 @@ struct ToDoListView: View {
     var body: some View {
         ZStack(alignment: .bottom){
             VStack{
-                Text("To-Do List").font(.largeTitle).frame(maxWidth: .infinity,alignment: .leading)
-                ScrollView(.horizontal,showsIndicators: false){
-                    HStack{
-                        ForEach(todoListManager.getCategories(),id:\.id){ category in
-                            TodoListCategoryCell(category: category,navigationController: self.navigationController).padding(EdgeInsets(top: 0, leading: 5, bottom: 0, trailing: 0))
-                        }.listStyle(.plain)
-                    }
-                }
-                Text("Today's Tasks").font(.title2).frame(maxWidth: .infinity,alignment: .leading).bold().padding(EdgeInsets(top: 5, leading: 10, bottom: 10, trailing: 0))
-                VStack{
-                    List(todoListManager.getTodaysTasks(),id: \.id){ task in
-                        TodoListTaskCell(task: task,navigationController: self.navigationController)
-                    }
+                ScrollView(showsIndicators: false){
+                    VStack{
+                        VStack(alignment: .center){
+                            StackedRingView(colors: [Color.red,Color.orange,Color.cyan], categoryPercentages: [0.5,0.9,0.7], categoryLabels: ["Important","Personal","Projects"]).fixedSize()
+                        }.background(.gray.opacity(0.1)).cornerRadius(15).frame(width: 200,height: 200).padding(EdgeInsets(top: 0, leading: 0, bottom: 20, trailing: 0))
+                        ScrollView(.horizontal,showsIndicators: false){
+                            HStack(alignment: .center){
+                                ForEach(self.todoListManager.getCategories(),id: \.id){ category in
+                                    TodoListCategoryCell(category: category, navigationController: navigationController).padding(EdgeInsets(top: 20, leading: 20, bottom: 20, trailing: 20))
+                                }.frame(width: 150, height: 200).background(.gray.opacity(0.1)).cornerRadius(10)
+                            }
+                        }.padding(EdgeInsets(top: 5, leading: 15, bottom: 5, trailing: 15))
+                        Text("Today's Tasks").font(.title2).frame(maxWidth: .infinity,alignment: .leading).bold().padding(EdgeInsets(top: 5, leading: 15, bottom: 5, trailing: 0))
+                        ForEach(self.todoListManager.getTodaysTasks(),id: \.id){ task in
+                            TodoListTaskCell(task: task,navigationController: self.navigationController).frame(height: 50).padding(EdgeInsets(top: 5, leading: 10, bottom: 5, trailing: 10))
+                        }.background(.gray.opacity(0.1)).cornerRadius(10).padding(EdgeInsets(top: 5, leading: 15, bottom: 5, trailing: 15))
+                    }.padding(EdgeInsets(top: 20, leading: 0, bottom: 20, trailing: 0))
                 }
             }
             HStack{
@@ -343,7 +347,6 @@ struct ToDoListView: View {
                     Spacer()
                 }.frame(width: 80,height: 80).background(.pink.opacity(0.75)).clipShape(Circle())
             }.frame(maxWidth: .infinity,alignment: .trailing).padding(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 10))
-
         }.onAppear{
             print(todoListManager.getCategories().map({ category in
                 return category.tasks
@@ -364,17 +367,13 @@ struct TodoListCategoryCell : View {
         self.navigationController = navigationController
     }
     
+    
+    
     var body: some View {
         VStack(alignment: .leading){
-            Text("\(self.category.tasks.count - self.category.completedTasks.count) Tasks").frame(maxWidth: .infinity,alignment: .leading)
-            Text(String(self.category.categoryName)).frame(maxWidth: .infinity,alignment: .leading)
-            Gauge(value: self.category.getPercentageCompleted(), in: 0...Double(self.category.getTotalTasks())) {
-                
-            }.gaugeStyle(.accessoryLinearCapacity).tint(.pink).frame(maxWidth: .infinity,alignment: .leading)
-        }.frame(width: 150,height: 100).padding(EdgeInsets(top: 0, leading: 10, bottom: 0, trailing: 10)).overlay{
-            RoundedRectangle(cornerRadius: 15).stroke(.white,lineWidth: 1)
-        }.background(Color.gray.opacity(0.2)).shadow(color: Color("LightShadow"), radius: 15,x: 0,y: 0).onAppear{
-            print("\(category.categoryName) : \(category.tasks)")
+            Label("Icon", systemImage: "compass.drawing").foregroundStyle(.pink).labelStyle(.iconOnly)
+            Text(self.category.categoryName).font(.caption).foregroundStyle(.gray)
+            Text("\(self.category.tasks.count) Tasks").frame(maxWidth: .infinity,alignment: .leading).font(.title2)
         }
     }
 }
@@ -384,16 +383,23 @@ struct TodoListTaskCell: View {
     @State var task : Task
     @State var navigationController : UINavigationController?
     
+    @State var isChecked: Bool
+    
     init(task: Task,navigationController : UINavigationController?) {
         self.task = task
         self.navigationController = navigationController
+        self.isChecked = task.ongoing
     }
     
     var body: some View {
         HStack{
-            Label("Checked", systemImage: "checkmark").labelStyle(.iconOnly).foregroundColor(.white).frame(maxWidth: .infinity,alignment: .leading)
+            Circle().stroke( isChecked ? Color.gray : Color.pink, lineWidth: 2).fill(isChecked ? Color.clear: Color.pink ).frame(width: 20,height: 20).onTapGesture {
+                withAnimation(.smooth) {
+                    isChecked.toggle()
+                }
+            }
             
-            Text(task.name).frame(maxWidth: .infinity,alignment: .leading).padding(EdgeInsets(top: 0, leading: 10, bottom: 0, trailing: 0))
+            Text(task.name).foregroundStyle(isChecked ? Color.white : Color.gray).strikethrough(!isChecked,color: Color.gray).frame(maxWidth: .infinity,alignment: .leading).padding(EdgeInsets(top: 0, leading: 10, bottom: 0, trailing: 0))
         }
         
     }
