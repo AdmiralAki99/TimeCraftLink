@@ -11,26 +11,26 @@ import UIKit
 class ToDoListManager : ObservableObject{
     // Static object to have one manager that stores, displays and manipulates items
     static let toDoList_manager = ToDoListManager()
-
+    
     
     @Published private var categories : [ToDoListCategory] = []
-//    static var ongoing_tasks = [Task]()
-    // One collection of tasks that are maintained in order to display them in the beginning.
     @Published private var todays_tasks : [Task] = []
-    
+    @Published private var categoryStatistics : [String:[Int]] = [:]
     /*
      MARK: Manager Calls
      */
     
     init(){
-        self.categories.append(ToDoListCategory(categoryName: "Important", colour: "", icon: ""))
-        self.categories.append(ToDoListCategory(categoryName: "Personal", colour: "", icon: ""))
-        self.categories.append(ToDoListCategory(categoryName: "Projects", colour: "", icon: ""))
+        self.createCategory(with: "Important", colour: "", icon: "hourglass")
+        self.createCategory(with: "Personal", colour: "", icon: "person.circle")
+        self.createCategory(with: "Projects", colour: "", icon: "wrench.adjustable.fill")
     }
     
     func createCategory(with categoryName: String, colour: String,icon : String){
-        let category = ToDoListCategory(categoryName: categoryName, colour: colour,icon: icon)
+        let category = ToDoListCategory(categoryName: categoryName, colour: colour,tasks: [],completedTasks: [],icon: icon)
         self.categories.append(category)
+        self.initCategoryTasks(category: category)
+        
     }
     
     func createTask(with name: String, category: String, description: String, dueDate: Date,startDate : Date){
@@ -61,6 +61,27 @@ class ToDoListManager : ObservableObject{
         }
         
         self.categories[selectedCategoryIndex].tasks.append(task)
+        self.updateCategoryStatistics(categoryName: categoryName)
+    }
+    
+    func peekCategory(categoryName: String)-> Task?{
+        if let selectIndex = self.categories.firstIndex(where: {$0.categoryName == categoryName}){
+            if categories[selectIndex].tasks.count > 0{
+                return categories[selectIndex].tasks[0]
+            }else{
+                return nil
+            }
+        }
+        
+        return nil
+    }
+    
+    func getCategoryTaskCount(categoryName: String) -> Int{
+        if let selectIndex = self.categories.firstIndex(where: {$0.categoryName == categoryName}){
+            return categories[selectIndex].tasks.count
+        }
+        
+        return 0
     }
     
     func completeTask(with task : Task,categoryName : String){
@@ -76,13 +97,13 @@ class ToDoListManager : ObservableObject{
     }
     
     func getTodaysTasks(with date: Date) -> [Task]{
-//        for categories in ToDoListManager.categories{
-//            for task in categories.tasks{
-//                if Calendar.current.isDateInToday(task.creationDate){
-//                    ToDoListManager.todays_tasks.append(task)
-//                }
-//            }
-//        }
+        //        for categories in ToDoListManager.categories{
+        //            for task in categories.tasks{
+        //                if Calendar.current.isDateInToday(task.creationDate){
+        //                    ToDoListManager.todays_tasks.append(task)
+        //                }
+        //            }
+        //        }
         return self.todays_tasks
     }
     
@@ -105,6 +126,59 @@ class ToDoListManager : ObservableObject{
                 task_status = task_status + "F"
             }
         }
+        
+    }
+    
+    func getCategoryTasks(categoryName : String)->[Task]{
+        if let selectIndex = self.categories.firstIndex(where: {$0.categoryName == categoryName}){
+            return categories[selectIndex].tasks + categories[selectIndex].completedTasks
+        }
+        
+        return []
+    }
+    
+    func getCategoryStatistics(categoryName : String) -> [Int]{
+        return self.categoryStatistics[categoryName] ?? [0,0,0]
+    }
+    
+    func initCategoryTasks(category : ToDoListCategory){
+        self.categoryStatistics[category.categoryName] = [0,0,0]
+    }
+    
+    func updateCategoryStatistics(categoryName : String){
+        
+        if let selectIndex = self.categories.firstIndex(where: {$0.categoryName == categoryName}){
+            let todaysTasks = self.categories[selectIndex].tasks.reduce(0) { partialResult, task in
+                var sum = partialResult
+                if task.startDate.isToday(){
+                    sum = partialResult + 1
+                }
+                return sum
+            }
+            
+            let weeksTasks = self.categories[selectIndex].tasks.reduce(0) { partialResult, task in
+                var sum = partialResult
+                if task.startDate.isThisWeek(){
+                    sum = partialResult + 1
+                }
+                return sum
+            }
+            
+            let monthlyTasks = self.categories[selectIndex].tasks.reduce(0) { partialResult, task in
+                var sum = partialResult
+                if task.startDate.isThisMonth(){
+                    sum = partialResult + 1
+                }
+                return sum
+            }
+            
+            // Month Tasks will look like an accumulation but if todays tasks and weeks tasks are subtracted then the remaining ones are not this week or today, they must be in the remaining part of the month
+            
+            let stats = [todaysTasks >= 0 ? todaysTasks : 0,weeksTasks-todaysTasks >= 0 ? weeksTasks-todaysTasks : 0,monthlyTasks-weeksTasks-todaysTasks >= 0 ? monthlyTasks-weeksTasks-todaysTasks : 0]
+            
+            self.categoryStatistics[categoryName] = stats
+        }
+        
         
     }
     

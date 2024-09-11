@@ -310,6 +310,8 @@ class ToDoListViewController: UIViewController{
 struct ToDoListView: View {
     
     @StateObject private var todoListManager = ToDoListManager.toDoList_manager
+//    @StateObject var manager = DataManager.data_manager
+    
     private var navigationController : UINavigationController?
     
     init(navigationController : UINavigationController? = nil){
@@ -360,20 +362,56 @@ struct ToDoListView: View {
 struct TodoListCategoryCell : View {
     
     @State var category : ToDoListCategory
-    @State var navigationController : UINavigationController?
+    @StateObject private var todoListManager = ToDoListManager.toDoList_manager
+    @State private var task : Task?
+    var navigationController : UINavigationController?
     
     init(category: ToDoListCategory,navigationController: UINavigationController?) {
         self.category = category
         self.navigationController = navigationController
     }
     
+    private let dateDictionary = [
+        0 : "Sun",
+        1 : "Mon",
+        2 : "Tue",
+        3 : "Wed",
+        4 : "Thu",
+        5 : "Fri",
+        6 : "Sat"
+    ]
     
+    private let weekdayColors = [Color.pink,Color.cyan,Color.green,Color.orange,Color.yellow,Color.mint]
+    
+    @State private var isToday : Bool = false
     
     var body: some View {
         VStack(alignment: .leading){
-            Label("Icon", systemImage: "compass.drawing").foregroundStyle(.pink).labelStyle(.iconOnly)
-            Text(self.category.categoryName).font(.caption).foregroundStyle(.gray)
-            Text("\(self.category.tasks.count) Tasks").frame(maxWidth: .infinity,alignment: .leading).font(.title2)
+            Label("Icon", systemImage: category.icon).foregroundStyle(.pink).labelStyle(.iconOnly)
+            Text(self.category.categoryName).font(.caption).foregroundStyle(.gray).padding(EdgeInsets(top: 0, leading: 0, bottom: 5, trailing: 0))
+            Text("\(task?.name ?? "")").frame(maxWidth: .infinity,alignment: .leading).bold().lineLimit(2).truncationMode(.tail)
+            if ((task?.dueDate.isThisWeek()) ?? false){
+                if(task?.dueDate.isToday() ?? false){
+                    HStack{
+                        Text("Today").foregroundStyle(.red).font(.caption).bold().padding(.horizontal,10).padding(.vertical,2)
+                    }.background(
+                        RoundedRectangle(cornerRadius: 10).fill(.red.opacity(0.3))
+                    ).padding(.vertical,10)
+                }else{
+                    HStack{
+                        Text(self.dateDictionary[task?.dueDate.getWeekday() ?? 0] ?? "").foregroundStyle(self.weekdayColors[task?.dueDate.getWeekday() ?? 0]).font(.caption).bold().padding(.horizontal,10).padding(.vertical,2)
+                    }.background(
+                        RoundedRectangle(cornerRadius: 10).fill(self.weekdayColors[task?.dueDate.getWeekday() ?? 0].opacity(0.3))
+                    ).padding(.vertical,10)
+                }
+                
+            }
+            
+        }.onAppear(){
+            self.task = todoListManager.peekCategory(categoryName: category.categoryName)
+            self.isToday = task?.dueDate.isToday() ?? false
+        }.onTapGesture {
+            navigationController?.pushViewController(CategoryViewController(category: self.category), animated: true)
         }
     }
 }
@@ -402,5 +440,40 @@ struct TodoListTaskCell: View {
             Text(task.name).foregroundStyle(isChecked ? Color.white : Color.gray).strikethrough(!isChecked,color: Color.gray).frame(maxWidth: .infinity,alignment: .leading).padding(EdgeInsets(top: 0, leading: 10, bottom: 0, trailing: 0))
         }
         
+    }
+}
+
+extension Date{
+    func isThisWeek() -> Bool{
+        
+        guard let startOfWeek = Calendar.current.dateInterval(of: .weekOfYear, for: Date())?.start else{
+            return false
+        }
+        guard let endOfWeek = Calendar.current.dateInterval(of: .weekOfYear, for: Date())?.end else{
+            return false
+        }
+        
+        return self >= startOfWeek && self < endOfWeek
+    }
+    
+    func isToday() -> Bool{
+        return Calendar.current.isDateInToday(self)
+    }
+    
+    func isThisMonth()->Bool{
+        guard let startOfMonth = Calendar.current.dateInterval(of: .month, for: self)?.start else{
+            return false
+        }
+        guard let endOfMonth = Calendar.current.dateInterval(of: .month, for: self)?.end else{
+            return false
+        }
+        
+        return self >= startOfMonth && self < endOfMonth
+    }
+    
+    func getWeekday() -> Int{
+        let weekday = Calendar.current.component(.weekday, from: self)
+        
+        return weekday
     }
 }
