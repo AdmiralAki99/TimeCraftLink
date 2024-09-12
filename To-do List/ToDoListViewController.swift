@@ -311,7 +311,6 @@ struct ToDoListView: View {
     
     @StateObject private var todoListManager = ToDoListManager.toDoList_manager
 //    @StateObject var manager = DataManager.data_manager
-    
     private var navigationController : UINavigationController?
     
     init(navigationController : UINavigationController? = nil){
@@ -324,7 +323,9 @@ struct ToDoListView: View {
                 ScrollView(showsIndicators: false){
                     VStack{
                         VStack(alignment: .center){
-                            StackedRingView(colors: [Color.red,Color.orange,Color.cyan], categoryPercentages: [0.5,0.9,0.7], categoryLabels: ["Important","Personal","Projects"]).fixedSize()
+                            StackedRingView(colors: [Color.orange,Color.mint,Color.green], categoryPercentages: todoListManager.getCategoryCompletedInfo(), categoryLabels: todoListManager.getCategoryLabels()).fixedSize()
+//                            Text("Category Labels: \(todoListManager.getCategoryLabels()[0])")
+//                            Text("Category Percentages: \(todoListManager.getCategoryCompletedInfo()[0])")
                         }.background(.gray.opacity(0.1)).cornerRadius(15).frame(width: 200,height: 200).padding(EdgeInsets(top: 0, leading: 0, bottom: 20, trailing: 0))
                         ScrollView(.horizontal,showsIndicators: false){
                             HStack(alignment: .center){
@@ -350,10 +351,12 @@ struct ToDoListView: View {
                 }.frame(width: 80,height: 80).background(.pink.opacity(0.75)).clipShape(Circle())
             }.frame(maxWidth: .infinity,alignment: .trailing).padding(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 10))
         }.onAppear{
-            print(todoListManager.getCategories().map({ category in
-                return category.tasks
-            }))
-            print("Today's Tasks: \(todoListManager.getTodaysTasks())")
+//            print(todoListManager.getCategories().map({ category in
+//                return category.tasks
+//            }))
+            print(todoListManager.getCategoryLabels())
+            print(todoListManager.getCategoryCompletedInfo())
+
         }
         
     }
@@ -363,7 +366,6 @@ struct TodoListCategoryCell : View {
     
     @State var category : ToDoListCategory
     @StateObject private var todoListManager = ToDoListManager.toDoList_manager
-    @State private var task : Task?
     var navigationController : UINavigationController?
     
     init(category: ToDoListCategory,navigationController: UINavigationController?) {
@@ -372,16 +374,16 @@ struct TodoListCategoryCell : View {
     }
     
     private let dateDictionary = [
-        0 : "Sun",
-        1 : "Mon",
-        2 : "Tue",
-        3 : "Wed",
-        4 : "Thu",
-        5 : "Fri",
-        6 : "Sat"
+        1 : "Sun",
+        2 : "Mon",
+        3 : "Tue",
+        4 : "Wed",
+        5 : "Thu",
+        6 : "Fri",
+        7 : "Sat"
     ]
     
-    private let weekdayColors = [Color.pink,Color.cyan,Color.green,Color.orange,Color.yellow,Color.mint]
+    private let weekdayColors = [Color.pink,Color.cyan,Color.green,Color.orange,Color.yellow,Color.mint,Color.teal]
     
     @State private var isToday : Bool = false
     
@@ -389,9 +391,9 @@ struct TodoListCategoryCell : View {
         VStack(alignment: .leading){
             Label("Icon", systemImage: category.icon).foregroundStyle(.pink).labelStyle(.iconOnly)
             Text(self.category.categoryName).font(.caption).foregroundStyle(.gray).padding(EdgeInsets(top: 0, leading: 0, bottom: 5, trailing: 0))
-            Text("\(task?.name ?? "")").frame(maxWidth: .infinity,alignment: .leading).bold().lineLimit(2).truncationMode(.tail)
-            if ((task?.dueDate.isThisWeek()) ?? false){
-                if(task?.dueDate.isToday() ?? false){
+            Text("\(todoListManager.peekCategory(categoryName: category.categoryName)?.name ?? "")").frame(maxWidth: .infinity,alignment: .leading).bold().lineLimit(2).truncationMode(.tail)
+            if ((todoListManager.peekCategory(categoryName: category.categoryName)?.dueDate.isThisWeek()) ?? false){
+                if(todoListManager.peekCategory(categoryName: category.categoryName)?.dueDate.isToday() ?? false){
                     HStack{
                         Text("Today").foregroundStyle(.red).font(.caption).bold().padding(.horizontal,10).padding(.vertical,2)
                     }.background(
@@ -399,17 +401,16 @@ struct TodoListCategoryCell : View {
                     ).padding(.vertical,10)
                 }else{
                     HStack{
-                        Text(self.dateDictionary[task?.dueDate.getWeekday() ?? 0] ?? "").foregroundStyle(self.weekdayColors[task?.dueDate.getWeekday() ?? 0]).font(.caption).bold().padding(.horizontal,10).padding(.vertical,2)
+                        Text(self.dateDictionary[todoListManager.peekCategory(categoryName: category.categoryName)?.dueDate.getWeekday() ?? 0] ?? "").foregroundStyle(self.weekdayColors[todoListManager.peekCategory(categoryName: category.categoryName)?.dueDate.getWeekday() ?? 0]).font(.caption).bold().padding(.horizontal,10).padding(.vertical,2)
                     }.background(
-                        RoundedRectangle(cornerRadius: 10).fill(self.weekdayColors[task?.dueDate.getWeekday() ?? 0].opacity(0.3))
+                        RoundedRectangle(cornerRadius: 10).fill(self.weekdayColors[todoListManager.peekCategory(categoryName: category.categoryName)?.dueDate.getWeekday() ?? 0].opacity(0.3))
                     ).padding(.vertical,10)
                 }
                 
             }
             
         }.onAppear(){
-            self.task = todoListManager.peekCategory(categoryName: category.categoryName)
-            self.isToday = task?.dueDate.isToday() ?? false
+        
         }.onTapGesture {
             navigationController?.pushViewController(CategoryViewController(category: self.category), animated: true)
         }
@@ -437,7 +438,7 @@ struct TodoListTaskCell: View {
                     if !isChecked{
                         ToDoListManager.toDoList_manager.completeTask(with: task, categoryName: task.category)
                     }else{
-                        ToDoListManager.toDoList_manager.completeTask(with: task, categoryName: task.category)
+                        ToDoListManager.toDoList_manager.uncompleteTask(with: task, categoryName: task.category)
                     }
                 }
             }
