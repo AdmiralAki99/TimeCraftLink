@@ -6,143 +6,145 @@
 //
 
 import UIKit
+import SwiftUI
 
-class ToDoListCategoryViewController: UIViewController {
+class EditTaskViewController : UIViewController{
     
-    let blurView : UIVisualEffectView = {
-        let view = UIVisualEffectView()
-        view.alpha = 0.4
-        return view
-    }()
+    var task : Task?
     
-    let dismissButton : UIButton = {
-        let button = UIButton()
-        button.backgroundColor = .clear
-        button.layer.cornerRadius = 15
-        button.setImage(UIImage(systemName: "xmark.circle"), for: .normal)
-        button.tintColor = .white
-        button.layer.masksToBounds = true
-        return button
-    }()
+    init(task: Task? = nil) {
+        super.init(nibName: nil, bundle: nil)
+        self.task = task
+    }
     
-    let addCategoryButton : UIButton = {
-        let button = UIButton()
-        button.backgroundColor = .clear
-        button.layer.cornerRadius = 15
-        button.setImage(UIImage(systemName: "plus"), for: .normal)
-        button.tintColor = .white
-        button.layer.masksToBounds = true
-        return button
-    }()
-
+    required init?(coder: NSCoder) {
+        fatalError()
+    }
     
-    private let categoryCollectionView : UICollectionView = UICollectionView(frame: .zero, collectionViewLayout: UICollectionViewCompositionalLayout(sectionProvider: { _, _ -> NSCollectionLayoutSection? in
-        let item = NSCollectionLayoutItem(layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0)))
-        
-        item.contentInsets = NSDirectionalEdgeInsets(top: 6, leading: 6, bottom: 6, trailing: 6)
-        
-        let group = NSCollectionLayoutGroup.horizontal(layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(120)),subitem: item , count: 2)
-        
-        group.contentInsets = NSDirectionalEdgeInsets(top: 1.0, leading: 1.0, bottom: 1.0, trailing: 1.0)
-        
-        return NSCollectionLayoutSection(group: group)
-    }))
-
     override func viewDidLoad() {
-        super.viewDidLoad()
+        overrideUserInterfaceStyle = .dark
         
-        view.backgroundColor = .clear
-        
-        dismissButton.addTarget(self, action: #selector(didDismiss), for: .touchUpInside)
-        
-        addCategoryButton.addTarget(self, action: #selector(createCategory), for: .touchUpInside)
-        
-        categoryCollectionView.backgroundColor = .clear
-        
-        categoryCollectionView.delegate = self
-        categoryCollectionView.dataSource = self
-        
-        categoryCollectionView.register(CategoryViewCollectionViewCell.self, forCellWithReuseIdentifier: CategoryViewCollectionViewCell.identifier)
-
-        // Do any additional setup after loading the view.
+        if let task = self.task{
+            let taskView = EditTaskView(item: task)
+            
+            let hostingController = UIHostingController(rootView: taskView)
+            
+            addChild(hostingController)
+            view.addSubview(hostingController.view)
+            
+            hostingController.view.frame = view.bounds
+            hostingController.view.autoresizingMask = [.flexibleWidth,.flexibleHeight]
+            
+            hostingController.didMove(toParent: self)
+        }
     }
     
     override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        initalizeBlurView()
-        view.addSubview(categoryCollectionView)
-        view.addSubview(dismissButton)
-        view.addSubview(addCategoryButton)
-        view.bringSubviewToFront(dismissButton)
-        view.bringSubviewToFront(addCategoryButton)
-
-        dismissButton.frame = CGRect(x: view.width - 40, y: 40, width: 30, height: 30)
         
-        addCategoryButton.frame = CGRect(x: dismissButton.left - 30, y: 40, width: 30, height: 30)
-        
-        categoryCollectionView.frame = CGRect(x: 0, y: dismissButton.bottom + 10, width: view.width , height: view.height - (dismissButton.bottom - 10))
-        
-       
     }
-    
-    func initalizeBlurView(){
-        
-        blurView.frame = view.frame
-        
-        blurView.effect = UIBlurEffect(style: .regular)
-        
-        view.addSubview(blurView)
-    }
-    
-    @objc func didDismiss(){
-        dismiss(animated: true)
-    }
-    
-    @objc func createCategory(){
-        let newCategoryViewController = NewCategoryViewController()
-        
-        if let categorySheet = newCategoryViewController.sheetPresentationController{
-            categorySheet.prefersGrabberVisible = true
-            categorySheet.detents = [.medium()]
-            present(newCategoryViewController, animated: true)
-        }
-    }
-    
-
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destination.
-        // Pass the selected object to the new view controller.
-    }
-    */
-
 }
 
-extension ToDoListCategoryViewController : UICollectionViewDelegate , UICollectionViewDataSource{
+struct EditTaskView : View {
+    @StateObject var todoListManager = ToDoListManager.toDoList_manager
     
-    func numberOfSections(in collectionView: UICollectionView) -> Int {
-        1
-    }
+    private var task : Task?
+    @State var name : String = ""
+    @State var startDate : Date = Date.now
+    @State var endDate : Date = Date.now
+    @State var description : String = ""
     
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        guard let cell = categoryCollectionView.dequeueReusableCell(withReuseIdentifier: CategoryViewCollectionViewCell.identifier, for: indexPath) as? CategoryViewCollectionViewCell else{
-            return UICollectionViewCell()
+    @FocusState var isNameFocused : Bool
+    @FocusState var isDescriptionFocused : Bool
+
+    private let category : [String] = {
+        let categoryNames = ToDoListManager.toDoList_manager.getCategories().map { category in
+            return category.categoryName
         }
-        
-        cell.generateViewCell(category: ToDoListManager.categories[indexPath.row])
-        
-        return cell
+        return categoryNames
+    }()
+    
+    @State private var categorySelection : String = {
+        return ToDoListManager.toDoList_manager.getCategories().first?.categoryName ?? ""
+    }()
+    
+    private var navigationController : UINavigationController?
+    
+    init(item: Task) {
+        self.task = item
+        self.startDate = item.startDate
+        self.endDate = item.dueDate
+        self.description = item.summary
     }
     
-    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        
+    var body: some View {
+        VStack{
+            Text(task?.name ?? "").font(.largeTitle).frame(maxWidth: .infinity,alignment: .leading).bold().padding(EdgeInsets(top: 10, leading: 10, bottom: 5, trailing: 0))
+            Form{
+                SwiftUI.Section(header: TaskSectionHeader(name: "Basic Info",iconName: "arrow.up.left.and.arrow.down.right")){
+                    HStack{
+                        Text("Start Date").frame(maxWidth: .infinity,alignment: .leading)
+                        DatePicker("",selection: $startDate,displayedComponents: [.date,.hourAndMinute]).datePickerStyle(.compact).padding(EdgeInsets(top: 0, leading: 10, bottom: 10, trailing: 0))
+                    }
+                    HStack{
+                        Text("End Date").frame(maxWidth: .infinity,alignment: .leading)
+                        DatePicker("",selection: $endDate,displayedComponents: [.date,.hourAndMinute]).datePickerStyle(.compact).padding(EdgeInsets(top: 0, leading: 10, bottom: 10, trailing: 0))
+                    }
+                    VStack{
+                        HStack{
+                            Text("Description").frame(maxWidth: .infinity,alignment: .leading).padding(EdgeInsets(top: 10, leading: 10, bottom: 0, trailing: 0)).frame(maxWidth: .infinity,alignment: .leading)
+                            Button{
+                                self.isDescriptionFocused = false
+                            }label: {
+                                Label("Add New Task", systemImage: "checkmark").tint(.white).labelStyle(.iconOnly)
+                            }
+                        }
+                        
+                        TextField("",text: $description,axis: .vertical).multilineTextAlignment(.leading).lineLimit(4...).textFieldStyle(.roundedBorder).focused($isDescriptionFocused)
+                    }
+                    VStack{
+                        Picker("Categories", selection: $categorySelection) {
+                            ForEach(category,id: \.self){name in
+                                Text(name).padding(.horizontal,10)
+                            }
+                        }.frame(maxWidth: .infinity,alignment: .leading)
+                    }
+                }
+            }
+            
+            HStack{
+                Button{
+                    
+                }label: {
+                    Spacer()
+                    Label("Save", systemImage: "plus").tint(.white).labelStyle(.titleOnly)
+                    Spacer()
+                }.tint(Color.white).frame(width: 60,height: 60).background(.pink).clipShape(Circle()).frame(maxWidth: .infinity,alignment: .leading)
+                Spacer()
+                Button{
+                    
+                }label: {
+                    Spacer()
+                    Label("Add", systemImage: "checkmark.circle").tint(.white).labelStyle(.titleOnly)
+                    Spacer()
+                }.tint(Color.white).frame(width: 60,height: 60).background(.pink).clipShape(Circle())
+            }.padding(EdgeInsets(top: 0, leading: 10, bottom: 10, trailing: 10))
+        }
+    }
+}
+
+struct TaskSectionHeader : View {
+    private var name = ""
+    private var iconName = ""
+    
+    init(name: String = "", iconName: String = "") {
+        self.name = name
+        self.iconName = iconName
     }
     
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return ToDoListManager.categories.count
+    var body: some View {
+        HStack{
+            Text(name)
+            Label("Header", systemImage: iconName).labelStyle(.iconOnly)
+        }
     }
-    
 }

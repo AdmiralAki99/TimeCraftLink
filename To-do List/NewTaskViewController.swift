@@ -65,56 +65,61 @@ struct NewTaskView: View {
     
     var body: some View {
         VStack{
-            Text("Add New Task").font(.largeTitle).frame(maxWidth: .infinity,alignment: .leading).bold()
-            VStack{
-                HStack{
-                    Text("Name").font(.caption).bold().frame(maxWidth: .infinity,alignment: .leading).padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 0)).frame(maxWidth: .infinity,alignment:.leading)
-                    Button{
-                        self.isNameFocused = false
-                    }label: {
-                        Label("Add New Task", systemImage: "checkmark").tint(.white).labelStyle(.iconOnly)
-                    }.padding(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 10))
-                }
-                
-                TextField("Enter the task name",text: $name,axis: .vertical).lineLimit(2...).padding(EdgeInsets(top: 0, leading: 10, bottom: 10, trailing: 0)).textFieldStyle(.roundedBorder).focused($isNameFocused)
-            }.overlay{
-                RoundedRectangle(cornerRadius: 15).stroke(.white,lineWidth: 1)
-            }.padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10))
-            VStack{
-                Text("Date").font(.caption).bold().frame(maxWidth: .infinity,alignment: .leading).padding(EdgeInsets(top: 10, leading: 10, bottom: 0, trailing: 0))
-                DatePicker("Enter the start date",selection: $startDate,displayedComponents: [.date,.hourAndMinute]).datePickerStyle(.compact).padding(EdgeInsets(top: 0, leading: 10, bottom: 10, trailing: 0))
-                
-                DatePicker("Enter the start date",selection: $endDate,displayedComponents: [.date,.hourAndMinute]).datePickerStyle(.compact).padding(EdgeInsets(top: 0, leading: 10, bottom: 10, trailing: 0))
-            }.overlay{
-                RoundedRectangle(cornerRadius: 15).stroke(.white,lineWidth: 1)
-            }.padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10))
             
-            HStack{
-                Text("Description").font(.caption).bold().frame(maxWidth: .infinity,alignment: .leading).padding(EdgeInsets(top: 10, leading: 10, bottom: 0, trailing: 0)).frame(maxWidth: .infinity,alignment: .leading)
-                Button{
-                    self.isDescriptionFocused = false
-                }label: {
-                    Label("Add New Task", systemImage: "checkmark").tint(.white).labelStyle(.iconOnly)
+            Text("Add A New Task").font(.largeTitle).frame(maxWidth: .infinity,alignment: .leading).bold().padding(EdgeInsets(top: 10, leading: 10, bottom: 5, trailing: 0))
+            Form{
+                SwiftUI.Section(header: TaskSectionHeader(name: "Details",iconName: "arrow.up.left.and.arrow.down.right")){
+                    VStack{
+                        HStack{
+                            Text("Task Name").frame(maxWidth: .infinity,alignment: .leading)
+                            Button{
+                                self.isNameFocused = false
+                            }label: {
+                                Label("Unfocus Name", systemImage: "checkmark").tint(.white).labelStyle(.iconOnly)
+                            }
+                        }
+                        
+                        TextField("Enter Task Name",text: $name,axis: .vertical).textFieldStyle(.roundedBorder).focused($isNameFocused)
+                    }
+                    HStack{
+                        Text("Start Date").frame(maxWidth: .infinity,alignment: .leading)
+                        DatePicker("",selection: $startDate,displayedComponents: [.date,.hourAndMinute]).datePickerStyle(.compact).padding(EdgeInsets(top: 0, leading: 10, bottom: 10, trailing: 0))
+                    }
+                    HStack{
+                        Text("End Date").frame(maxWidth: .infinity,alignment: .leading)
+                        DatePicker("",selection: $endDate,displayedComponents: [.date,.hourAndMinute]).datePickerStyle(.compact).padding(EdgeInsets(top: 0, leading: 10, bottom: 10, trailing: 0))
+                    }
+                    VStack{
+                        HStack{
+                            Text("Description").frame(maxWidth: .infinity,alignment: .leading).padding(EdgeInsets(top: 10, leading: 10, bottom: 0, trailing: 0)).frame(maxWidth: .infinity,alignment: .leading)
+                            Button{
+                                self.isDescriptionFocused = false
+                            }label: {
+                                Label("Unfocus Description", systemImage: "checkmark").tint(.white).labelStyle(.iconOnly)
+                            }
+                        }
+                        
+                        TextField("Enter description here",text: $description,axis: .vertical).multilineTextAlignment(.leading).lineLimit(4...).textFieldStyle(.roundedBorder).focused($isDescriptionFocused)
+                    }
+                    VStack{
+                        Picker("Categories", selection: $categorySelection) {
+                            ForEach(category,id: \.self){name in
+                                Text(name).padding(.horizontal,10)
+                            }
+                        }.frame(maxWidth: .infinity,alignment: .leading)
+                    }
                 }
             }
             
-            TextField("Enter the task description",text: $description,axis: .vertical).padding(EdgeInsets(top: 0, leading: 10, bottom: 10, trailing: 0)).multilineTextAlignment(.leading).lineLimit(4...).textFieldStyle(.roundedBorder).padding().focused($isDescriptionFocused)
-            
             HStack{
-                Picker("Meal Selection",selection: $categorySelection){
-                    ForEach(category,id:\.self){
-                        Text($0).foregroundColor(Color(UIColor.label))
-                    }
-                }.background(Color.pink).clipShape(Capsule()).accentColor(Color(UIColor.label)).pickerStyle(.menu).frame(maxWidth: .infinity,alignment: .leading)
-                Spacer()
                 Button{
-                    todoListManager.createTask(with: "Test", category: "Important", description: "Test", dueDate: Date(), startDate: Date())
+                    todoListManager.createTask(with: name, category: categorySelection, description: description, dueDate: endDate, startDate: startDate)
                 }label: {
                     Spacer()
-                    Label("Add New Task", systemImage: "plus").tint(.white).labelStyle(.iconOnly)
+                    Label("Add New Task", systemImage: "checkmark.circle").tint(.white).labelStyle(.iconOnly)
                     Spacer()
                 }.tint(Color.white).frame(width: 60,height: 60).background(.pink).clipShape(Circle())
-            }.padding(EdgeInsets(top: 0, leading: 10, bottom: 10, trailing: 10))
+            }.padding(EdgeInsets(top: 0, leading: 10, bottom: 10, trailing: 10)).frame(maxWidth: .infinity,alignment: .trailing)
             
             
         }

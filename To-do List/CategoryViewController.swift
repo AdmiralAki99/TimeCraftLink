@@ -305,7 +305,10 @@ struct CategoryTaskCell : View {
             }.frame(maxWidth: .infinity,alignment: .leading).padding(EdgeInsets(top: 0, leading: 10, bottom: 0, trailing: 0))
         }.contextMenu{
             Button("Edit Task"){
-                navigationController?.pushViewController(EditTaskViewController(), animated: true)
+                navigationController?.pushViewController(EditTaskViewController(task: task), animated: true)
+            }
+            Button("Delete Task"){
+                
             }
         }
         

@@ -434,6 +434,11 @@ struct TodoListTaskCell: View {
             Circle().stroke( isChecked ? Color.gray : Color.pink, lineWidth: 2).fill(isChecked ? Color.clear: Color.pink ).frame(width: 20,height: 20).onTapGesture {
                 withAnimation(.smooth) {
                     isChecked.toggle()
+                    if !isChecked{
+                        ToDoListManager.toDoList_manager.completeTask(with: task, categoryName: task.category)
+                    }else{
+                        ToDoListManager.toDoList_manager.completeTask(with: task, categoryName: task.category)
+                    }
                 }
             }
             
