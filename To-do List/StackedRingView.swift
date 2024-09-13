@@ -27,8 +27,6 @@ struct StackedRingView : View {
         }.padding(EdgeInsets(top: 20, leading: 20, bottom: 20, trailing: 20)).onAppear(){
             self.categoryLabels = todoListManager.getCategoryLabels()
             self.categoryPercentages = todoListManager.getCategoryCompletedInfo()
-            print("Percentage in Ring Stacked View: \(todoListManager.getCategoryCompletedInfo())")
-            print("Categories in Ring Stacked View: \(todoListManager.getCategoryLabels())")
         }
     }
 }
@@ -57,8 +55,6 @@ struct StackedRings : View {
                 Circle().trim(from: 0, to: self.todoListManager.getCategoryCompletedInfo()[index]).stroke(AngularGradient(gradient: Gradient(colors: [colors[index].darken(),colors[index]]), center: .center,startAngle: .degrees(0),endAngle: .degrees(360)),style: StrokeStyle(lineWidth: 8,lineCap: .round)).frame(width: largestCircleSize - (Double(index) * circleDifference),height: largestCircleSize - (Double(index) * circleDifference)).rotationEffect(.degrees(-90))
             }
         }.onAppear(){
-            print("Rings Percentages : \(todoListManager.getCategoryCompletedInfo())")
-            print("Rings Labels : \(todoListManager.getCategoryLabels())")
         }
     }
 }
