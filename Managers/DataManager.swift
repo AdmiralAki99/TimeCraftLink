@@ -55,6 +55,8 @@ class DataManager : ObservableObject{
     
     @Published var mealList : [MealModel] = []
     @Published var recipeList : [RecipeModel] = []
+    @Published var categoryList : [CategoryModel] = []
+    @Published var taskList : [TaskModel] = []
     
     var swiftDataModelContext : ModelContext? = nil
     var swiftDataContainer : ModelContainer? = nil
@@ -64,7 +66,7 @@ class DataManager : ObservableObject{
     init(){
         do{
             let containerConfig = ModelConfiguration(isStoredInMemoryOnly: false)
-            let modelContainer = try ModelContainer(for: MealModel.self,RecipeModel.self, configurations: containerConfig)
+            let modelContainer = try ModelContainer(for: MealModel.self,RecipeModel.self,CategoryModel.self,TaskModel.self, configurations: containerConfig)
             self.swiftDataContainer = modelContainer
             
             DispatchQueue.main.async{
@@ -73,11 +75,8 @@ class DataManager : ObservableObject{
                 self.fetchMeals{ resp in
                     switch resp{
                     case true:
-                        print("Successfully fetched data")
-                        print(self.mealList)
                         break
                     case false:
-                        print("Failed To Fetch Data")
                         break
                     }
                 }
@@ -232,6 +231,62 @@ class DataManager : ObservableObject{
         }catch{
             print("Error: \(error.localizedDescription)")
             fatalError("Not able to delete Model")
+        }
+    }
+    
+    func addToDoListCategory(category : ToDoListCategory){
+        guard let modelContext = self.swiftDataModelContext else{
+            return
+        }
+
+        let item = CategoryModel(category: category)
+        modelContext.insert(item)
+        self.categoryList.append(item)
+    }
+    
+    func addToDoListTask(task : Task){
+        guard let modelContext = self.swiftDataModelContext else{
+            return
+        }
+
+        let item = TaskModel(task: task)
+        modelContext.insert(item)
+        self.taskList.append(item)
+    }
+    
+    func removeCategory(category: ToDoListCategory){
+        guard let modelContext = self.swiftDataModelContext else{
+            return
+        }
+        guard let model = self.categoryList.filter({$0.id == category.id}).first else{
+            return
+        }
+        
+        if let index = self.categoryList.firstIndex(where: {$0.id == category.id}){
+            self.categoryList.remove(at: index)
+        }
+        
+        do{
+            modelContext.delete(model)
+            saveModelContext()
+        }
+    }
+    
+    func removeTask(task: Task){
+        guard let modelContext = self.swiftDataModelContext else{
+            return
+        }
+        guard let model = self.taskList.filter({$0.id == task.id}).first else{
+            return
+        }
+        
+        if let index = self.taskList.firstIndex(where: {$0.id == task.id}){
+            self.taskList.remove(at: index)
+        }
+        
+        do{
+            modelContext.delete(model)
+            saveModelContext()
         }
     }
         
