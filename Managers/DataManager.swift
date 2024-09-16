@@ -80,6 +80,14 @@ class DataManager : ObservableObject{
                         break
                     }
                 }
+                self.fetchToDoCategory { resp in
+                    switch resp{
+                    case true:
+                        break
+                    case false:
+                        break
+                    }
+                }
             }
         }catch{
             print("Error: \(error.localizedDescription)")
@@ -289,6 +297,32 @@ class DataManager : ObservableObject{
             saveModelContext()
         }
     }
+    
+    private func fetchToDoCategory(completion : @escaping (Bool)->Void){
+        guard let modelContext = self.swiftDataModelContext else{
+            return
+        }
+        
+        var fetchReqDescriptor = FetchDescriptor<CategoryModel>(predicate: nil)
+        var fetchTaskReqDescriptor = FetchDescriptor<TaskModel>(predicate: nil)
+        do{
+            self.categoryList = try modelContext.fetch(fetchReqDescriptor)
+            self.taskList = try modelContext.fetch(fetchTaskReqDescriptor)
+            
+            completion(true)
+        }catch{
+            print("Error: \(error.localizedDescription)")
+            fatalError("Not able to fetch meals from Context")
+            completion(false)
+        }
+    }
+    
+    private func convertToDoCategory(category : [CategoryModel]){
+        let categoryList = category.map({ToDoListCategory(category: $0)})
+        ToDoListManager.toDoList_manager.initializeCategories(categoryList: categoryList)
+    }
+    
+    
         
         
 }
