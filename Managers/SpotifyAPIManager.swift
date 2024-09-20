@@ -130,7 +130,11 @@ final class SpotifyAPIManager : ObservableObject{
                     //                    print(data)
                     let data = try JSONDecoder().decode(CurrentPlayingTrack.self, from: data)
                     DispatchQueue.main.async{
+                        if let track = self.currentTrack{
+                            BluetoothManager.bluetooth_manager.sendMessage(message: "\(track.name);\(track.artists.first?.name ?? "")", characteristic: .MusicState)
+                        }
                         self.currentTrack = data.item
+                        
                     }
                     completion(.success(data))
                     
@@ -180,13 +184,13 @@ final class SpotifyAPIManager : ObservableObject{
     func rewindSpotifyPlayback(completion : @escaping((Result<String,Error>)->Void)){
         createRequest(with: URL(string: "\(API.apiURL)/me/player/previous?"), request_type: .POST) { request in
             let task = URLSession.shared.dataTask(with: request) { data, response, error in
-                print(data)
+                
             }
             task.resume()
         }
     }
     
-    func seekToPositionSpotifyPlayback(with seek_position: Int, device_id: String,completion : @escaping((Result<String,Error>)->Void)){
+    func seekToPositionSpotifyPlayback(seek_position: Int,completion : @escaping((Result<String,Error>)->Void)){
         createRequest(with: URL(string: "\(API.apiURL)/me/player/seek?position_ms=\(seek_position)"), request_type: .PUT) { request in
             let task = URLSession.shared.dataTask(with: request) { data, response, error in
                 
@@ -198,8 +202,9 @@ final class SpotifyAPIManager : ObservableObject{
     func togglePlaybackShuffle(completion: @escaping((Result<String,Error>)->Void)){
         createRequest(with: URL(string: "\(API.apiURL)/me/player/shuffle?"), request_type: .PUT) { request in
             let task = URLSession.shared.dataTask(with: request) { data, resp, err in
-                print(data)
-                print(err)
+                print("Response : \(String(describing: resp))")
+                print("Data : \(String(describing: data))")
+                print("Error: \(String(describing: err))")
             }
             task.resume()
         }
@@ -208,8 +213,9 @@ final class SpotifyAPIManager : ObservableObject{
     func toggleRepeatPlayback(completion: @escaping((Result<String,Error>)->Void)){
         createRequest(with: URL(string: "\(API.apiURL)/me/player/repeat?"), request_type: .PUT) { request in
             let task = URLSession.shared.dataTask(with: request) { data, resp, err in
-                print(data)
-                print(err)
+                print("Response : \(String(describing: resp))")
+                print("Data : \(String(describing: data))")
+                print("Error: \(String(describing: err))")
             }
             task.resume()
         }
@@ -274,6 +280,20 @@ final class SpotifyAPIManager : ObservableObject{
     
     func getCurrentSeekPercentage() -> Float{
         return (Float(self.currentProgress)/Float(self.currentTrack?.duration_ms ?? 0))
+    }
+    
+    func seekTrack(percentage : Float){
+        var new_progress = Float(self.currentTrack?.duration_ms ?? 0) * percentage
+        self.seekToPositionSpotifyPlayback(seek_position: Int(new_progress)) { resp in
+            switch resp{
+            case .success(let string):
+                print(string)
+                break
+            case .failure(let error):
+                print(error)
+                break
+            }
+        }
     }
     
     

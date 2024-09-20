@@ -188,7 +188,7 @@ struct MusicPlaybackView: View {
                         
                     }
                 }) {
-                    Image(systemName: "shuffle.circle.fill").font(.largeTitle).foregroundColor(.white)
+                    Image(systemName: "shuffle.circle.fill").font(.largeTitle).foregroundColor(.pink)
                 }.padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10))
                 Spacer()
                 Button(action: {
@@ -196,7 +196,7 @@ struct MusicPlaybackView: View {
                         
                     }
                 }) {
-                    Image(systemName: "backward.fill").font(.largeTitle).foregroundColor(.white)
+                    Image(systemName: "backward.fill").font(.largeTitle).foregroundColor(.pink)
                 }.padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10))
                 Spacer()
                 Button(action: {
@@ -213,7 +213,7 @@ struct MusicPlaybackView: View {
                 }) {
                     Image(systemName: isPlaying ? "pause.fill" : "play.fill")
                             .font(.largeTitle)
-                            .foregroundColor(.white)
+                            .foregroundColor(.pink)
                 }.padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10))
                 Spacer()
                 Button(action: {
@@ -223,14 +223,14 @@ struct MusicPlaybackView: View {
                 }) {
                     Image(systemName: "forward.fill")
                         .font(.largeTitle)
-                        .foregroundColor(.white)
+                        .foregroundColor(.pink)
                 }.padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10))
                 Button(action: {
                     playbackManager.toggleRepeatPlayback { res in
                         
                     }
                 }) {
-                    Image(systemName: "repeat.circle.fill").font(.largeTitle).foregroundColor(.white)
+                    Image(systemName: "repeat.circle.fill").font(.largeTitle).foregroundColor(.pink)
                 }.padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10))
                 Spacer()
             }.padding(.top)
@@ -246,6 +246,7 @@ struct MusicPlaybackView: View {
 
 struct SpectrumView: View {
     @Binding var isPlaying: Bool
+    @State private var isDragging: Bool = false
     @State private var phase: Double = 0.0
     @Binding private var completionPercentage: CGFloat
     @State private var barWidth: CGFloat = 4.0
@@ -259,7 +260,6 @@ struct SpectrumView: View {
     init(isPlaying: Binding<Bool>, completionPercentage : Binding<CGFloat>) {
         self._isPlaying = isPlaying
         self._completionPercentage = completionPercentage
-        print("Progress : \(completionPercentage)")
     }
 
     var body: some View {
@@ -274,7 +274,25 @@ struct SpectrumView: View {
                             .frame(width: barWidth, height: self.getRectangleHeight(i: i, width: geometry.size.width))
                             .cornerRadius(cornerRadius)
                     }
-                }
+                }.gesture(
+                    DragGesture()
+                        .onChanged { value in
+                            isDragging = true
+                            stopAnimation()
+                            
+                            if value.translation.width < 0 {
+                                completionPercentage = max(0.0, completionPercentage - 0.01) // Adjust decrement value as needed
+                            } else if value.translation.width > 0 {
+                                completionPercentage = min(1.0, completionPercentage + 0.01) // Adjust increment value as needed
+                            }
+                        }
+                        .onEnded { _ in
+                            // Update completionPercentage when swipe ends
+                            SpotifyAPIManager.api_manager.seekTrack(percentage: Float(completionPercentage))
+                            isDragging = false
+                            startAnimation()
+                        }
+                )
             }
             .background(Color.black)
             .edgesIgnoringSafeArea(.all)
@@ -295,12 +313,12 @@ struct SpectrumView: View {
     }
 
     func startAnimation() {
-        stopAnimation()
+        stopAnimation() // Stop any running timers
         timer = Timer.scheduledTimer(withTimeInterval: 0.02, repeats: true) { timer in
-            if self.isPlaying {
+            if isPlaying && !isDragging {
                 self.phase += self.speed
                 self.updateCompletionPercentage()
-            } else {
+            } else if !isPlaying {
                 timer.invalidate()
             }
         }
@@ -320,7 +338,7 @@ struct SpectrumView: View {
     
     func getBarColor(i: Int) -> Color {
         let barCount = Int((UIScreen.main.bounds.width + spacing) / (barWidth + spacing))
-        return CGFloat(i) < (completionPercentage * CGFloat(barCount)) ? .white : .gray
+        return CGFloat(i) < (completionPercentage * CGFloat(barCount)) ? .pink : .gray
     }
     
     func updateCompletionPercentage() {
