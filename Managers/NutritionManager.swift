@@ -388,7 +388,6 @@ class NutritionManager : NSObject,ObservableObject{
                 self.addFatMacro(intake: fatNutrient.amount)
                 self.addCalories(intake: calorie ?? 0.0)
                 
-                print("Grocery Protein : \(proteinNutrient.amount), Grocery Carbs : \(carbNutrient.amount), Grocery Fat : \(fatNutrient.amount), Grocery Calories : \(calorie)")
                 
             }else if let meal = meal as? Recipe{
                 guard let proteinNutrient = meal.nutritionalInfo?.nutrients?.filter({$0.name == "Protein"}).first else{
@@ -403,7 +402,6 @@ class NutritionManager : NSObject,ObservableObject{
                 
                 let calorie = Double(meal.nutritionalInfo?.calories ?? "")
                 
-                print("Recipe Protein : \(proteinNutrient.amount), Recipe Carbs : \(carbNutrient.amount), Recipe Fat : \(fatNutrient.amount), Recipe Calories : \(calorie)")
                 
                 self.addProteinMacro(intake: proteinNutrient.amount)
                 self.addCarbMacro(intake: carbNutrient.amount)

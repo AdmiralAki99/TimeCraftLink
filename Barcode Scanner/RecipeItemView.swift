@@ -27,7 +27,6 @@ class RecipeItemViewController : UIViewController{
     
     override func viewDidLoad() {
         view.overrideUserInterfaceStyle = .dark
-        print(self.nutritionalInfo)
         let vc = UIHostingController(rootView: RecipeItemView(recipeItem: recipe!, recipeNutritionalInfo: nutritionalInfo!))
         let recipeView = vc.view!
         recipeView.translatesAutoresizingMaskIntoConstraints = false

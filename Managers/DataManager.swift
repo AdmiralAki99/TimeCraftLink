@@ -95,6 +95,22 @@ class DataManager : ObservableObject{
         }
     }
     
+    func fetchCategories(completion: @escaping (Bool)->Void){
+        guard let modelContext = self.swiftDataModelContext else{
+            return
+        }
+        
+        let fetchReqDescriptor = FetchDescriptor<CategoryModel>(predicate: nil)
+        do{
+            print(try modelContext.fetch(fetchReqDescriptor))
+            completion(true)
+        }catch{
+            print("Error: \(error.localizedDescription)")
+            fatalError("Not able to fetch meals from Context")
+            completion(false)
+        }
+    }
+    
     private func fetchMeals(completion : @escaping (Bool)->Void){
         guard let modelContext = self.swiftDataModelContext else{
             return
@@ -136,6 +152,12 @@ class DataManager : ObservableObject{
         self.recipeList.append(item)
     }
     
+    func convertToDoListCategory(categories: [CategoryModel]){
+        var categoryList = categories.map({ToDoListCategory(category: $0)})
+        
+        ToDoListManager.toDoList_manager.initializeCategories(categoryList: categoryList)
+    }
+        
     func convertMealModels(mealModels : [MealModel], recipeModels : [RecipeModel]){
         let breakfastMealModels = mealModels.filter({$0.mealType == "Breakfast"})
         let lunchMealModels = mealModels.filter({$0.mealType == "Lunch"})
@@ -243,6 +265,7 @@ class DataManager : ObservableObject{
     }
     
     func addToDoListCategory(category : ToDoListCategory){
+        
         guard let modelContext = self.swiftDataModelContext else{
             return
         }
@@ -302,13 +325,11 @@ class DataManager : ObservableObject{
         guard let modelContext = self.swiftDataModelContext else{
             return
         }
-        
-        var fetchReqDescriptor = FetchDescriptor<CategoryModel>(predicate: nil)
-        var fetchTaskReqDescriptor = FetchDescriptor<TaskModel>(predicate: nil)
+        let fetchReqDescriptor = FetchDescriptor<CategoryModel>(predicate: nil)
         do{
             self.categoryList = try modelContext.fetch(fetchReqDescriptor)
-            self.taskList = try modelContext.fetch(fetchTaskReqDescriptor)
-            
+            print("Category Models: \(self.categoryList.map({$0.categoryName}))")
+//            self.convertToDoListCategory(categories: self.categoryList)
             completion(true)
         }catch{
             print("Error: \(error.localizedDescription)")
@@ -322,7 +343,7 @@ class DataManager : ObservableObject{
         ToDoListManager.toDoList_manager.initializeCategories(categoryList: categoryList)
     }
     
-    
+    private func updateToDoListCategory(category : ToDoListCategory){
         
-        
+    }
 }

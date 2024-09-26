@@ -58,11 +58,11 @@ class LoginScreen: UIViewController {
             return
         }
         
-        let tabBarVC = TabBarViewController()
+        let homepage = HomePageViewController()
         
-        tabBarVC.modalPresentationStyle = .fullScreen
+        homepage.modalPresentationStyle = .fullScreen
         
-        present(tabBarVC,animated: true)
+        present(homepage,animated: true)
         
     }
 
