@@ -1,4 +1,4 @@
-# Home Automation
+# Swift Companion App
 
 ## Overview
 
