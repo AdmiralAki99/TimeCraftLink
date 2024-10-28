@@ -4,6 +4,26 @@
 
 The project was to learn and get used to Swift programming language as well as learn the functions of the various kits available and create an app that is able to communicate certain information with the smartwatch using BLE GATT Server and multiple characteristics
 
+## Screen Preview
+
+
+
+https://github.com/user-attachments/assets/e3101e15-a8ad-4979-b343-e145be45290a
+
+
+
+https://github.com/user-attachments/assets/ae211b2f-fd2e-41d1-b67f-4c921a983c56
+
+
+
+
+https://github.com/user-attachments/assets/5f5855ac-5321-4e16-9fbd-d4535d301293
+
+
+
+https://github.com/user-attachments/assets/6e65aad3-3f15-4854-92ab-ea015475ba75
+
+
 ## Features
 
 <ol>
